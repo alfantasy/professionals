@@ -1,0 +1,638 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation{% endblock %}
+
+{% block content %}
+<h1>Documentation</h1>
+<p>In each section below, there may be subsections for each setting or special option, which will be described in detail.</p>
+<p>All documentation on the following products is completely open information and does not imply copyright.</p>
+<p>Select the required documentation section:</p>
+
+<link rel="stylesheet" href="/static/github-dark.min.css">
+<script src="/static/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<script>
+    // Инициализация всех tooltip'ов на странице
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+
+<!-- Аккордеон с разделами -->
+<div class="accordion" id="docsAccordion">
+    <!-- Раздел 1 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                Сhapter 1: Alt Linux
+            </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>This section contains information about Alt Linux.</strong> 
+                <p>There are so-called "subsections" in the section, which will be divided into elements of the settings of various packages, by the system itself with examples in the form of "pieces" of code and screenshots.</p>
+                <p>Alt Linux is a domestic operating system based on the Linux kernel and the Mandriva distribution.</p>
+                <p>The use of Alt at the moment is system administration to replace Windows Server.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionAlt">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneAlt" aria-expanded="true" aria-controls="collapseOneAlt">
+                            Сhapter 1.1: Basic settings
+                        </button>
+                    </h2>
+                    <div id="collapseOneAlt" class="accordion-collapse collapse" aria-labelledby="headingOneAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>The basic setup includes naming the system, creating users, and assigning them as local administrators of the system other than the superuser. Users who will be considered local will be added to the sudoers file</p>
+                            <br>
+                            <p>And so, let's start with the simplest, the name of the system:</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+hostnamectl set-hostname [full_name.domain]
+# The hostname assignment is most often performed together with the domain.                                        
+                                </code></pre>
+                            </div>
+                            <br>
+                            <p>Assigning a system name is necessary to identify it, for example, when a computer is in a domain, the main controller will read the names of the systems and identify them in a similar way.</p>
+                            <p>Creating a user:</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+useradd [NAME] -m -U -s /bin/bash 
+# the -m key is required to create the user's home directory, the -U key is required to automatically create a group for the created user
+# the -s key is required to specify the shell.
+
+usermod -aG wheel [NAME] 
+# This command allows us to transfer the user to a special group of "administrators" (referred to in the system as the "wheel")
+
+echo "[NAME] ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+# The command allows you to add a user to the sudoers file to access the system without entering a password. (sudo su -)
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwoAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoAlt" aria-expanded="false" aria-controls="collapseTwoAlt">
+                            Сhapter 1.2: Addressing
+                        </button>
+                    </h2>
+                    <div id="collapseTwoAlt" class="accordion-collapse collapse" aria-labelledby="headingTwoAlt" data-bs-parent="#AccordionAlt"]>
+                        <div class="accordion-body">
+                            <p>Addressing in Alt is based on manually configuring devices and specifying IP addresses on the system.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+mkdir /etc/net/ifaces/[INTERFACE-NAME]                                    
+vim /etc/net/ifaces/[INTERFACE-NAME]/options
+> BOOTPROTO=static
+> TYPE=eth
+> DISABLED=no
+> NM_CONTROLLED=no
+> CONFIG_IPV4=yes
+
+# BOOTPROTO configuration - is responsible for configuring the adapter itself, in this case, the static address.
+# If you need a dynamically assigned DHCP, then write dhcpv4 / dhcp 
+# TYPE - specifies the adapter type. 
+# DISALBED - whether the adapter will be turned off or not
+# NM_CONTROLLED - whether the adapter will be controlled by the NetworkManager
+# CONFIG_IPV4 - enables IPv4 configuration 
+
+:wq! - exit VIM with save. 
+
+echo "[IP]/[Mask]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4address
+echo "default via [IP-Gateway]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4route
+
+systemctl restart network # restarting the service responsible for the network 
+ip -c -br a # we are looking at the formatted output of the command indicating the adapters, status and its IP
+ip -c r # we are looking at the routes
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThreeAlt">
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThreeAlt" aria-expanded="false" aria-controls="collapseThreeAlt"
+> Chapter 1.3: Temporary configuration for NAT addressing
+                        </button>
+                    </h2>
+                    <div id="collapseThreeAlt" class="accordion-collapse collapse" aria-labelledby="headingThreeAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p> Temporary setup is necessary for emergency internet connection.</p>
+                            <div class="card-body">
+                                <pre><code class='language-bash'>
+ip link add link [NAME-INTERFACE] name [NAME-INTERFACE].[ID VLAN] type vlan id [ID VLAN] # make a link from the adapter to the additional
+ip link set dev [NAME-INTERFACE] up # raise the main adapter
+ip link set dev [NAME-INTERFACE].[VLAN ID] up # raise the reference adapter
+ip addr add [IP address]/[Mask] dev [NAME-INTERFACE].[VLAN ID] # assign the IP address to the reference adapter
+ip route add 0.0.0.0/0 via [Gateway IP address] # assigning a route
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFourAlt">
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFourAlt" aria-expanded="false" aria-controls="collapseFourAlt">
+Chapter 1.4: Setting up switching
+                        </button>
+                    </h2>
+                    <div id="collapseFourAlt" class="accordion-collapse collapse" aria-labelledby="headingFourAlt" data-bs-parent="#AccordionAlt">
+                        <p>Switching settings are needed for packet forwarding.</p>
+                        <div calss="card-body">
+                            <pre><code class='language-bash'>
+apt-get install openvswitch # install a special package
+
+mkdir /etc/net/ifaces/[NAME-INTERFACE`S] # We create a folder for each interface                        
+cat <<EOF > /etc/net/ifaces/[NAME-INTERFACE]/options 
+    TYPE=eth
+    BOOTPROTO=static
+EOF 
+# Making a configuration file for the first file
+
+cp /etc/net/ifaces/[First NAME-INTERFACE]/options /etc/net/ifaces/[Next NAME-INTERFACE]/options # Moving the configuration file to all other
+systemctl restart network # restarting the main network service
+
+mkdir /etc/net/ifaces/MGMT # creating the main management interface
+vim /etc/net/ifaces/MGMT/options
+> TYPE=ovsport
+> BOOTPROTO=static
+> CONFIG_IPV4=yes
+> BRIDGE=NAME-BRIDGE OR SYSTEM 
+> VID=VLAN ID  
+
+# where TYPE is, we specify the adapter type, in our case it is ovsport, because it will use openvswitch
+# BOOTPROTO - we already know, this is an indication of the settings for the adapter
+# CONFIG_IPV4 - enabling IP address assignment 
+# BRIDGE - enter the name of the bridge
+# VID - specify the VLAN number 
+
+:wq! - exit VIM with save 
+
+vim /etc/net/ifaces/default/options
+> ...
+> OVS_REMOVE=no
+
+# We cut off the OVS service management, because we configure it ourselves.
+
+:wq! - exit VIM with save
+
+systemctl restart network # restart the management service
+
+ip -c -br -4 a # looking at the formatted output of IP addresses on
+ip -c r interfaces # looking at routes
+ovs-vsctl show # checking openvswitch settings
+
+ovs-vsctl add port [NAME BRIDGE] [INTERFACE] [TRUNK/TAG]=[ID VLAN WITH ,] 
+EXAMPLE: 
+    ovs-vsctl add port SW ens19 trunk=3213,3214,3215
+# Here you create a port on the bridge with an indication of the interface being conducted and the type of port conduction, trunk - trunk.
+# When specifying a tag, we can specify a single VLAN ID 
+
+modprobe 8021q # enabling the kernel module 
+echo "8021q" | tee -a /etc/modules # fully enable it on an ongoing basis
+
+ovs-vsctl show # viewing openvswitch
+lsmod | grep "8021q" # checking the module operation
+                            </code></pre>
+                            <br>
+                            <p> The basic switching settings were given here, and now we will build the protocol of the main STP tree</p>
+                            <br>
+                            <pre><code class="language-bash">
+ovs-vsctl set bridge [NAME BRIDGE] stp_enable=true # setting the STP protocol to TRUE
+ovs-vsctl set bridge [NAME-BRIDGE] other_config:stp-priority=[16384 OR ANY NUMBER] # specifying a number less than if it must be rooted
+# If it should be secondary, then the number is higher than the root number.
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFiveAlt">
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiveAlt" aria-expanded="false" aria-controls="collapseFiveAlt">
+Chapter 1.5: DNS Server Configuration
+                        </button>
+                    </h2>
+                    <div id="collapseFiveAlt" class="accordion-collapse collapse" aria-labelledby="headingFiveAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p> This section contains information about configuring the DNS server.</p>
+                            <p><strong> Important!</strong> When changing the configuration, be careful with the configuration files, otherwise everything will break and nothing will work. :(</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+# Temporary configuration specifying the DNS server from Yandex for installing packages 
+echo "nameserver 77.88.8.8" > /etc/resolv.conf 
+
+apt-get update && apt-get install -y bind bind-utils # installing BIND packages and special utilities from the same
+
+# Open the main Bind configuration file and change certain settings:
+vim /etc/bind/options.conf 
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { any; }; # but you can also specify none, nothing will change :D 
+
+> forwarders { 77.88.8.8; }; # if we do not specify a redirector here, there will be no Internet and no standard zones
+
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; }; # specify the IP addresses that will have access to the DNS server
+> allow-transfer { [Secondary IP DNS Server from local machine]; }; # specify the backup DNS server, if available. 
+
+:wq! - exit VIM with save
+
+systemctl enable --now bind # enable and add bind to startup
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf 
+    search [DOMAIN]
+nameserver [IP DNS Server from local machine]
+EOF
+# where [IP DNS Server from local machine] - we specify the IP of our machine on which we configured the whole thing. 
+
+systemctl restart network bind # restart the necessary services 
+
+# In order to check, you can ping the same Yandex 
+ping -c3 ya.ru
+
+# At the exit, you should receive successful pings on the DNS of the site.
+                                </code></pre>
+                            <br>
+                            <p> There are no distinguishing features when setting up a backup DNS, but we will provide the settings briefly.</p>
+                            <br>
+                            <pre><code class="language-bash">
+vim /etc/bind/options.conf 
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { none; }; 
+
+> forwarders { 77.88.8.8; }; 
+
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; };
+> allow-transfer { none; }; 
+# Is none here, because it should not refer to the first DNS, because it is a backup, nothing needs to be forwarded.
+
+control bind-slave enabled # enable the SLAVE mode and set the control options for it 
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf
+    search [DOMAIN] 
+    nameserver [First DNS Server from local machine]
+    nameserver [Second DNS Server from local machine]
+EOF
+systemctl restart network && systemctl enable --now bind # restart necessary services
+                            </code></pre>
+                            <br>
+                            <p> <strong>Important!</strong> In case of a bind malfunction, namely an error with access rights, you must enter the following:</p>
+                            <pre><code class="language-bash">control bind-chroot disabled</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSixAlt">
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixAlt" aria-expanded="false" aria-controls="collapseSixAlt">
+Adapter 1.6: NTP protocol. Raising your server based on the NTP protocol.
+                        </button>
+                    </h2>
+                    <div id="collapseSixAlt" class="accordion-collapse collapse" aria-labelledby="headingSixAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>In this section, we will configure an NTP server that will run on the basis of an external server.</p>
+                            <pre><code class="language-bash">
+apt-get install chrony # installing a special package
+
+vim /etc/chrony.conf  
+> server [IP NTP Server] iburst prefer # specify as preferred server 
+> local stratum [N] # specify the stratum value if necessary
+> allow [IP-Subnet] # specify the allowed subnets
+
+:wq! - exit VIM with save
+
+systemctl enable --now chronyd # enabling and adding chronyd to startup
+
+chronyc sources # checking the functionality
+
+timedatectl # checking the time zone
+
+# On other machines that need to be connected to NTP
+apt-get install chrony 
+vim /etc/chrony.conf 
+> server [IP NTP Server] iburst prefer 
+
+:wq! 
+
+systemctl enable --now chronyd # enabling and adding chronyd to startup
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Раздел 2 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Сhapter 2: Cisco Packet Tracer
+            </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>This section contains information about Cisco Packet Tracer (hereinafter referred to as CPT).</strong>
+                <p>Select the appropriate subsection.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionCPT">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCPT" aria-expanded="false" aria-controls="collapseOneCPT">
+Chapter 2.1: Basic settings
+                        </button>
+                    </h2>
+                    <div id="collapseOneCPT" class="accordion-collapse collapse" aria-labelledby="headingOneCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            The basic CPT setup will include very few parameters, but still necessary for further actions inside the switch and router system.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+en # switching to privileged mode, otherwise we won't be able
+conf t # switching to configuration mode
+hostname [NAME]                      
+ip domain-name [DOMAIN]              
+# Here, again, we specify the domain. Each machine is referred to as a domain, and in the case of the usual variants, the domain is not specified.
+# They will be connected by a working group.
+
+# Specifying DNS settings:
+conf t # switching to
+ip name-server configuration mode [First IP DNS-server] # Specifying the first DNS
+ip name-server [Second IP DNS-server] # We specify the second DNS
+ip domain-name [DOMAIN] # Specifying the domain
+write # configuration entry
+
+# We specify NTP:
+conf t # switching to
+ntp server configuration mode [IP NTP Server] # Specifying the NTP server
+ntp timezone [TIMEZONE] # We specify the time zone (UTC format)
+write # configuration entry
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwoCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoCPT" aria-expanded="false" aria-controls="collapseTwoCPT">
+                            Chapter 2.2: Addressing
+                        </button>
+                    </h2>
+                    <div id="collapseTwoCPT" class="accordion-collapse collapse" aria-labelledby="headingTwoCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p>Device addressing is based on interfaces and ports.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+show port brief # A command showing the connected ports.
+
+conf t # switching to interface configuration mode
+[Interface name]/[VLAN ID] 
+desc "[Description/Purpose]"
+ip address [Address]/[Bitmask] # We specify the first address, which will be the gateway in the future with your settings already on the systems. 
+
+port te[N] # switching to the desired port, which will look towards the rest of the devices
+service-instance te[N]/[INTERFACE] # creating a service instance based on port -> interface
+encapsulation dot1q [VLAN] exact # setting the encapsulation taking into account if it is VLAN
+rewrite pop 1 # overwriting interface settings
+connect ip interface [INT-VLAN] # attaching the assigned IP on the interface to the service instance
+
+P.S. if this is an interface, and not exactly a VLAN, then: encapsulation untagged
+# Here are the full settings, if it's still an interface, not a VLAN.:
+
+conf t # switching to
+interface configuration mode [INT] # switching to
+desc interface "[Description/Purpose]" # purpose of description
+ip address [Address]/[Bitmask] # IP address assignment 
+
+port te[N] # switching to
+the service-instance port te[N]/[INT] # switching to the service instance 
+encapsulation untagged # creating an untagged encapsulation
+connect ip interface [INT] # attaching an IP interface to a service instance
+write # write to the configuration file
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThreeCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThreeCPT" aria-expanded="false" aria-controls="collapseThreeCPT">
+                            Chapter 2.3: Configuring the connection to the provider
+                        </button>
+                    </h2>
+                    <div id="collapseThreeCPT" class="accordion-collapse collapse" aria-labelledby="headingThreeCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> The router's connection to the provider is based on service instances.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # switching to configuration mode                                    
+int [NAME] # switching to
+ip address [IP]/[Mask] interface # assigning an address towards the provider
+exit # exit the interface
+
+port te[N] # specify the port number facing the provider
+service-instance te[N]/[INT] # specify the port number facing the provider and specify the interface made. Thus, we create a service instance. 
+encapsulation untagged # we make an untagged encapsulation
+connect ip interface [INT] # we assign an IP connection and specify the name of the interface to be created
+exit # exit instance
+exit # exit port configuration
+
+ip route 0.0.0.0/0 [IP-Gateway-R] # see point 1
+write # configuration entry
+
+show ip route static - viewing routes on the router
+                                </code></pre>
+                            <p> Point 1: where IP-Gateway-R is, specify the IP address of the gateway and the main IP address of the adapter from the provider, it will be the gateway.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFourCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFourCPT" aria-expanded="false" aria-controls="collapseFourCPT">
+Chapter 2.4: Configuring NAT
+                        </button>
+                    </h2>
+                    <div id="collapseFourCPT" class="accordion-collapse collapse" aria-labelledby="headingFourCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> NAT is necessary for packet distribution over the network, and we will consider configuration based on the basic interfaces.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # switching to
+interface [INT] # switching to
+ip nat interface [OUTSIDE/INSIDE] 
+# Specify outside - if you need to take packets from there, most often there is a network (provider). 
+# Specify inside - if we send packages, the rest of the devices are there.
+
+ip nat pool [NAME] [IPFirst]-[IP-End] # Creating a pool
+of ip addresses nat source dynamic inside pool [NAME] overload [IP address R] # see point 1
+                                </code></pre>
+                                <p> Point 1: Where the IP address is R, specify the IP address from the provider given to the router.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFiveCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiveCPT" aria-expanded="false" aria-controls="collapseFiveCPT">
+                            Chapter 2.5: Configuring DHCP
+                        </button>
+                    </h2>
+                    <div id="collapseFiveCPT" class="accordion-collapse collapse" aria-labelledby="headingFiveCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> DHCP is required for IP address allocation.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # switching to
+ip pool configuration mode [NAME] [IPFirst]-[IP-End] # Creating a pool of addresses
+dhcp server 1 # switching to the configuration mode for the DHCP
+pool [NAME] 1 # assigning a pool of addresses
+mask [MASK in Bit] # assign a bit mask
+gateway [IP-Gateway] # we assign
+dns gateway [IP],[OR ANY IP] # we specify the DNS server that the pool accesses
+domain-name [DOMAIN] # assign the domain
+exit # exit the address pool configuration mode
+exit # exit the DHCP server configuration mode
+
+interface [INT] # switching
+dhcp server 1 interface # enabling the DHCP server on the interface
+exit # exit the interface
+write # configuration entry
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSixCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixCPT" aria-expanded="false" aria-controls="collapseSixCPT">
+Chapter 2.6: IP Tunneling configuration
+                        </button>
+                    </h2>
+                    <div id="collapseSixCPT" class="accordion-collapse collapse" aria-labelledby="headingSixCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            Tunneling involves connecting one router to another by redirecting packets through an ISP.</p>
+                            As a rule, packets do not linger at the provider, but immediately find the recipient, bypassing the provider - therefore, the packet will not be visible on the provider's side.</p>
+                            <pre><code class="language-bash">
+conf t # switching to
+interface tunnel.0 # switching to
+desc "[Description/Purpose]" # purpose
+ip address add [IP]/[MASK] # assign an IP address
+ip mtu [MTU] # assign the MTU
+ip tunnel [IP from Provider] [IP Second Router from Provider] mode gre # Assigning a tunnel between the routers
+end # complete the full configuration and exit configuration mode
+write # configuration entry
+# where the IP addresses are specified, the IP addresses of the routers facing the provider are indicated there
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSevenCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSevenCPT" aria-expanded="false" aria-controls="collapseSevenCPT">
+Chapter 2.7: OSPF configuration 
+                        </button>
+                    </h2>
+                    <div id="collapseSevenCPT" class="accordion-collapse collapse" aria-labelledby="headingSevenCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> OSPF is necessary for distributing packets over the network.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # switching to
+router ospf 1 # switching to OSPF configuration mode
+ospf router-id [Personal IP from Router] # assigning the router ID
+passive-interface default # assigning the default interface
+network [IP] [Hosts] area 0 # network assignment
+no passive-interface tunnel.0 # turn off the passive mode on the tunnel. IF IT IS CONFIGURED! If not configured, you do not need
+exit # exit OSPF
+exit # exit configuration mode
+write # configuration entry
+
+# Example of specifying a network:
+network 192.168.1.0 0.0.0.255 area 0
+
+# Securing the OSPF protocol through password protection:
+conf t # switching to
+interface tunnel.0 # switching to the
+ip tunnel interface ospf auth message-digest # switching to the ip password protection mode
+ospf message-digest-key 1 md5 [ANY PASS] # assigning a password with an MD5 hash 
+exit # exit the interface
+write # configuration entry
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+    </div>
+
+    <!-- Chapter 3 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Chapter 3: Custom Firewall
+    </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>The adapter responsible for custom firewall to replace the station firewall inside the system.</strong>
+                <p data-bs-toggle="tooltip" data-bs-title="actually, this is the OS - Ideco NGFW" data-bs-placement="left">Firewall Graphical User Interface (Firewall GUI, and then FirewallG) is a firewall that uses a graphical interface.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionFirewallG"> 
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneFirewallG">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneFirewallG" aria-expanded="false" aria-controls="collapseOneFirewallG">
+                            Chapter 3.1: Basic settings
+                        </button>
+                    </h2>
+                    <div id="collapseOneFirewallG" class="accordion-collapse collapse" aria-labelledby="headingOneFirewallG" data-bs-parent="#AccordionFirewallG">
+                        <div class="accordion-body">
+                            <p>The basic configuration of FirewallG has the advantage that the whole basis of a firewall is a graphical interface and there will be nothing complicated about it.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chapter 4 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingFour">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Chapter 4: Cyber Backup
+            </button>
+        </h2>
+        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>This is a section with examples.</strong> Here you can provide examples of using your product or API.
+            </div>
+        </div>
+    </div>
+
+    <!-- Accordion with pictures and code -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingExample">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                Chapter 5: Code example
+            </button>
+        </h2>
+        <div id="collapseExample" class="accordion-collapse collapse" aria-labelledby="headingExample" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <p><strong>Here is a sample code with an image:</strong></p>
+                <!-- A card with a code -->
+                <div class="card-body">
+                    <pre><code class="language-python">
+def hello_world():
+print("Hello, World!")
+
+hello_world()
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

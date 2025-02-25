@@ -1,0 +1,91 @@
+/* Анимация для раскрытия разделов */
+.accordion-collapse {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Дополнительные стили для кнопок */
+.accordion-button {
+    background-color: #f8f9fa;
+    color: #794ee5;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #007BFF;
+    color: white;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+}
+
+.accordion-button:hover {
+    background: #48656d;
+    color: #e3e3e3; /* Светло-серый текст */
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 1;
+    transform: translateY(20px);
+}
+
+/* --- Заголовок раздела --- */
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* --- Карточка с кодом --- */
+pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.nested-accordion {
+    margin-left: 20px; /* Смещение вправо */
+    border-left: 2px solid #ddd; /* Вертикальная линия для обозначения вложенности */
+    padding-left: 10px; /* Отступ для визуального разделения */
+}
+
+/* Навигационная панель - исправленный стиль */
+.navbar {
+    background: rgba(0, 0, 0, 0.7); /* Чуть затемненный фон изначально */
+    transition: background 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.navbar-scrolled {
+    background: rgba(0, 0, 0, 0.9); /* Темнее при прокрутке */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Тень для глубины */
+}
+
+/* Убираем перекрытие контента */
+body {
+    padding-top: 70px; /* Делаем отступ под фиксированный навбар */
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    line-height: 1.6;
+}
+
+/* Улучшенный стиль заголовков */
+h1, h2, h3 {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Стилизация jumbotron */
+.jumbotron {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+

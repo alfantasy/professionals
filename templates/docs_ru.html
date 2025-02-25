@@ -1,0 +1,1215 @@
+{% extends "base.html" %}
+
+{% block title %}Документация{% endblock %}
+
+{% block content %}
+<h1>Документация</h1>
+<p>В каждом нижеприведенном разделе могут быть подразделы для каждой настройки или специальной опции, о которой будет подробно рассказано.</p>
+<p>Все документации по нижеприведенным продуктам являются полностью открытой информацией и не предполагают авторские права.</p>
+<p>Выберите необходимый раздел документации:</p>
+
+<link rel="stylesheet" href="/static/github-dark.min.css">
+<script src="/static/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<script>
+    // Инициализация всех tooltip'ов на странице
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+
+<!-- Аккордеон с разделами -->
+<div class="accordion" id="docsAccordion">
+    <!-- Раздел 1 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                Раздел 1: Alt Linux
+            </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>Данный раздел содержит информацию об Alt Linux.</strong> 
+                <p>В разделе есть так называемые "подразделы", которые будут разделены на элементы настроек различных пакетов, самой системой с примерами в виде "кусочков" кода и скриншотов.</p>
+                <p>Alt Linux - отечественная операционная система, основанная на ядре Linux и на дистрибутиве Mandriva.</p>
+                <p>Применение Alt на данный момент - это системное администрирование на замену Windows Server.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionAlt">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneAlt" aria-expanded="true" aria-controls="collapseOneAlt">
+                            Раздел 1.1: Базовые настройки
+                        </button>
+                    </h2>
+                    <div id="collapseOneAlt" class="accordion-collapse collapse" aria-labelledby="headingOneAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Базовая настройка включает в себя наименование системы, создание юзеров, назначение их как локальных администраторов системы кроме суперпользователя. Юзеров, которые будут считаться локальными, будем добавлять в файл sudoers</p>
+                            <br>
+                            <p>И так, начнем с самого простого, наименование системы:</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+hostnamectl set-hostname [full_name.domain]
+# Назначение хостнейма - чаще всего производится вместе с доменом.                                        
+                                </code></pre>
+                            </div>
+                            <br>
+                            <p>Назначение имени системы необходима для определения её, например, когда компьютер в домене, основной контроллер будет считывать наименования систем и идентифицировать их подобным образом.</p>
+                            <p>Создание пользователя:</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+useradd [NAME] -m -U -s /bin/bash 
+# ключ -m необходим для создания домашней директории пользователя, ключ -U необходим для автоматической создании группы для созданного пользователя
+# ключ -s необходим для указания командной оболочки.
+
+usermod -aG wheel [NAME] 
+# Данная команда позволяет нам перенести пользователя в специальную группу "администраторов" (в системе называется как "колесо")
+
+echo "[NAME] ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+# Команда позволяет дописать в файл sudoers пользователя для обращения к системе без ввода пароля. (sudo su -)
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwoAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoAlt" aria-expanded="false" aria-controls="collapseTwoAlt">
+                            Раздел 1.2: Адресация
+                        </button>
+                    </h2>
+                    <div id="collapseTwoAlt" class="accordion-collapse collapse" aria-labelledby="headingTwoAlt" data-bs-parent="#AccordionAlt"]>
+                        <div class="accordion-body">
+                            <p>Адресация в Alt основана на настройке устройств в ручную и указыванию IP-адресов на системе.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+mkdir /etc/net/ifaces/[INTERFACE-NAME]                                    
+vim /etc/net/ifacese/[INTERFACE-NAME]/options
+> BOOTPROTO=static
+> TYPE=eth
+> DISABLED=no
+> NM_CONTROLLED=no
+> CONFIG_IPV4=yes
+
+# Настройка BOOTPROTO - отвечает за преднастройку самого адаптера, в этом случае - статический адрес.
+# Если нужен DHCP - динамически назначаемый, то пишем dhcpv4 / dhcp 
+# TYPE - указание типа адаптера 
+# DISALBED - выключен ли адаптер будет будет или нет
+# NM_CONTROLLED - будет ли адаптер контролироваться NetworkManager`ом 
+# CONFIG_IPV4 - включает конфигурацию IPv4 
+
+:wq! - выход из VIM с сохранением. 
+
+echo "[IP]/[Mask]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4address
+echo "default via [IP-Gateway]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4route
+
+systemctl restart network # перезагружаем службу, отвечающую за сеть 
+ip -c -br a # смотрим отформатированный вывод команды с указанием адаптеров, статуса и его IP
+ip -c r # смотрим маршруты
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThreeAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThreeAlt" aria-expanded="false" aria-controls="collapseThreeAlt">
+                            Раздел 1.3: Временная настройка для NAT - адресация
+                        </button>
+                    </h2>
+                    <div id="collapseThreeAlt" class="accordion-collapse collapse" aria-labelledby="headingThreeAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p> Временная настройка необходима для экстренного проведения интернета.</p>
+                            <div class="card-body">
+                                <pre><code class='language-bash'>
+ip link add link [NAME-INTERFACE] name [NAME-INTERFACE].[ID VLAN] type vlan id [ID VLAN] # делаем ссылку с адаптера на дополнительный
+ip link set dev [NAME-INTERFACE] up # поднимаем основной адаптер
+ip link set dev [NAME-INTERFACE].[ID VLAN] up # поднимаем ссылочный адаптер
+ip addr add [IP адрес]/[Mask] dev [NAME-INTERFACE].[ID VLAN] # назначаем IP адрес на ссылочный адаптер
+ip route add 0.0.0.0/0 via [IP адрес Gateway] # назначаем маршрут
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFourAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFourAlt" aria-expanded="false" aria-controls="collapseFourAlt">
+                            Раздел 1.4: Настройка коммутации
+                        </button>
+                    </h2>
+                    <div id="collapseFourAlt" class="accordion-collapse collapse" aria-labelledby="headingFourAlt" data-bs-parent="#AccordionAlt">
+                        <p>Настройка коммутации нужна для перенаправлении пакетов.</p>
+                        <div calss="card-body">
+                            <pre><code class='language-bash'>
+apt-get install openvswitch # установка специального пакета
+
+mkdir /etc/net/ifaces/[NAME-INTERFACE`S] # На каждый интерфейс создаем папку                        
+cat <<EOF > /etc/net/ifaces/[NAME-INTERFACE]/options 
+    TYPE=eth
+    BOOTPROTO=static
+EOF 
+# Делаем конфигурационный файл на первый файл
+
+cp /etc/net/ifaces/[First NAME-INTERFACE]/options /etc/net/ifaces/[Next NAME-INTERFACE]/options # Перемещаем файл конфигурации на все остальные
+systemctl restart network # перезагрузка основной службы сети
+
+mkdir /etc/net/ifaces/MGMT # создаем основной менеджмет-интерфейс
+vim /etc/net/ifaces/MGMT/options
+> TYPE=ovsport
+> BOOTPROTO=static
+> CONFIG_IPV4=yes
+> BRIDGE=NAME-BRIDGE OR SYSTEM 
+> VID=VLAN ID  
+
+# где TYPE - указываем тип адаптера, в нашем случае это ovsport, ибо будет использовать openvswitch
+# BOOTPROTO - уже знаем, это указание настроек для адаптера
+# CONFIG_IPV4 - включаем назначение IP адреса 
+# BRIDGE - указываем название моста
+# VID - указываем номер VLAN 
+
+:wq! - выход из VIM с сохранением 
+
+vim /etc/net/ifaces/default/options
+> ...
+> OVS_REMOVE=no
+
+# Отрубаем управление OVS службой, ибо настраиваем сами.
+
+:wq! - выход из VIM с сохранением
+
+systemctl restart network # перезагрузка управляющей службы
+
+ip -c -br -4 a # смотрим отформатированный вывод IP адресов на интерфейсах 
+ip -c r # смотрим маршруты
+ovs-vsctl show # проверяем настройки openvswitch
+
+ovs-vsctl add port [NAME BRIDGE] [INTERFACE] [TRUNK/TAG]=[ID VLAN WITH ,] 
+EXAMPLE: 
+    ovs-vsctl add port SW ens19 trunk=3213,3214,3215
+# Здесь вы создаем порт на мосту с указанием проводимого интерфейса и типом проводимости порта, trunk - магистральный.
+# При указании tag - мы можем указать единственный ID VLAN 
+
+modprobe 8021q # включаем модуль ядра 
+echo "8021q" | tee -a /etc/modules # полностью включаем его на постоянной основе
+
+ovs-vsctl show # просмотр настроек openvswitch
+lsmod | grep "8021q" # проверка работы модуля
+                            </code></pre>
+                            <br>
+                            <p> Здесь были приведены основные настройки коммутации, а теперь построим протокол основного древа STP</p>
+                            <br>
+                            <pre><code class="language-bash">
+ovs-vsctl set bridge [NAME BRIDGE] stp_enable=true # установка STP протокола в статус TRUE 
+ovs-vsctl set bridge [NAME-BRIDGE] other_config:stp-priority=[16384 OR ANY NUMBER] # указываем число меньше, если он должен быть корневым
+# Если должен быть второстепенным, то выше число, чем у корневого.
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFiveAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiveAlt" aria-expanded="false" aria-controls="collapseFiveAlt">
+                            Раздел 1.5: Настройка DNS сервера
+                        </button>
+                    </h2>
+                    <div id="collapseFiveAlt" class="accordion-collapse collapse" aria-labelledby="headingFiveAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p> Данный раздел содержит информацию о настройке DNS сервера.</p>
+                            <p><strong> Важно!</strong> При изменении конфигурации быть осторожными с конфигурационными файлами, иначе все сломается и работать ничего не будет. :(</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+# Временная настройка с указанием DNS сервера от Yandex для установки пакетов 
+echo "nameserver 77.88.8.8" > /etc/resolv.conf 
+
+apt-get update && apt-get install -y bind bind-utils # установка пакетов BIND и спец.утилит от него же
+
+# Открываем основной конфигурационный файл Bind и меняем определенные настройки:
+vim /etc/bind/options.conf 
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { any; }; # но можно указать и none, ничего не изменится :D 
+
+> forwarders { 77.88.8.8; }; # если не укажем тут перенаправляющего, не будет интернета и стандартных зон
+
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; }; # указываем IP-адреса, которые будут иметь доступ к DNS серверу
+> allow-transfer { [Secondary IP DNS Server from local machine]; }; # указываем резервный DNS сервер при его наличии. 
+
+:wq! - выход из VIM с сохранением
+
+systemctl enable --now bind # включаем и добавляем bind в автозагрузку
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf 
+    search [DOMAIN]
+    nameserver [IP DNS Server from local machine]
+EOF
+# где [IP DNS Server from local machine] - указываем IP нашей машины, на которой и настраивали все это дело. 
+
+systemctl restart network bind # перезагружаем необходимые сервисы 
+
+# Дабы проверить, можно пропинговать тот же Yandex 
+ping -c3 ya.ru
+
+# На выходе должны получить удачные пинги по DNS сайта.
+                                </code></pre>
+                            <br>
+                            <p> При настройке резервного DNS, отличительных особенностей нет, но предоставим настройки вкратце.</p>
+                            <br>
+                            <pre><code class="language-bash">
+vim /etc/bind/options.conf 
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { none; }; 
+
+> forwarders { 77.88.8.8; }; 
+
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; };
+> allow-transfer {none; }; 
+# Здесь none, потому что он не должен ссылаться на первый DNS, ибо сам является резервным, пересылать ничего не нужно.
+
+control bind-slave enabled # подключаем режим SLAVE и выставляем ему опции control 
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf
+    search [DOMAIN] 
+    nameserver [First DNS Server from local machine]
+    nameserver [Second DNS Server from local machine]
+EOF 
+systemctl restart network && systemctl enable --now bind # перезагружаем необходимые сервисы
+                            </code></pre>
+                            <br>
+                            <p> <strong>Важно!</strong> В случае неработоспособности bind, а именно ошибкой с правами доступа, необходимо ввести следующее:</p>
+                            <pre><code class="language-bash">control bind-chroot disabled</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSixAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixAlt" aria-expanded="false" aria-controls="collapseSixAlt">
+                            Раздел 1.6: Протокол NTP. Поднятие своего сервера на основе NTP протокола.
+                        </button>
+                    </h2>
+                    <div id="collapseSixAlt" class="accordion-collapse collapse" aria-labelledby="headingSixAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>В данном разделе будет настраивать NTP сервер, который будет работать на основе внешнего сервера.</p>
+                            <pre><code class="language-bash">
+apt-get install chrony # установка специального пакета
+
+vim /etc/chrony.conf  
+> server [IP NTP Server] iburst prefer # указываем как предпочитаемый сервер 
+> local stratum [N] # указываем при необходимости значение стратума
+> allow [IP-Subnet] # указываем разрешенные подсети
+
+:wq! - выход из VIM с сохранением
+
+systemctl enable --now chronyd # включаем и добавляем chronyd в автозагрузку
+
+chronyc sources # проверяем работоспособность
+
+timedatectl # проверяем временную зону
+
+# На остальных машинах, которые необходимо подключить к NTP 
+apt-get install chrony 
+vim /etc/chrony.conf 
+> server [IP NTP Server] iburst prefer 
+
+:wq! 
+
+systemctl enable --now chronyd # включаем и добавляем chronyd в автозагрузку
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSevenAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSevenAlt" aria-expanded="false" aria-controls="collapseSevenAlt">
+                            Раздел 1.7: Доменная инфраструктура SAMBA AD 
+                        </button>
+                    </h2>
+                    <div id="collapseSevenAlt" class="accordion-collapse collapse" aria-labelledby="headingSevenAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Полностью посвящаем свое время отдельному разделу, в котором будут настройки, рассчитанные на доменную инфраструктуру Samba.</p>
+                            <p>Работоспособность Samba полностью зависит от настроенного BIND, и если вдруг, он не работает, значит и домен тоже не заработает.</p>
+                            <p>В случае, если BIND ругается на файлы /etc/bind/named.conf, то сделайте следующее:</p>
+                            <pre><code class="language-bash">
+control bind-chroot disabled
+# Выставление данной настройки полностью выключает внезапное безконтрольное поведение BIND.
+# Если её не отключить, то BIND использует режим "CHROOT", хотя имеет своего пользователя.
+                            </code></pre>
+                            <br>
+                            <p>Перейдем к самой настройке Samba AD</p>
+                            <br>
+                            <pre><code class="language-bash">
+apt-get install -y task-samba-dc # установка пакета SAMBA AD 
+control bind-chroot disabled # выключаем режим CHROOT (о нем было сказано выше)
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind 
+# Отключение типа кэша krb5kdc от BIND, тем самым предоставляя доступ Samba к протоколу Kerberos.
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf 
+# Вводим наименования файлов от Samba к основному файлу BIND.
+
+# Отредактируем файл, отвечающий за BIND: 
+vim /etc/bind/options.conf 
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes; 
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # выход из VIM с сохранением
+
+# Отключаем логгирование, вводим ключ KEYTAB и включаем минимальные ответы.
+
+systemctl stop bind # останавливаем BIND
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Удаляем старые конфигурационные файлы, приватные каталоги и создаем папку SYSVOL.
+
+samba-tool domain provision # производим инициализацию домена. 
+# ВАЖНО! При выборе модуля, поскольку, мы использовали в ранних настройках DNS:
+# DNS backend: BIND9_DLZ 
+
+systemctl enable --now samba && systemctl start bind 
+# Запускаем Samba AD с добавлением в автозапуск и bind
+
+cp /var/lib/samba/private/krb5.conf /etc/krb5.conf # копируем конфигурационный файл Kerberos из приватного каталога Samba в основной.
+
+# Добавление записей типа A, PTR и CNAME: 
+
+# Записи типа A добавляются следующим образом:
+samba-tool dns add 127.0.0.1 [domain-name] [machine-name] A [IP machine] -U[Name Admininstrator] -p[Password]
+# Добавление записи A. Пример заполнения:
+samba-tool dns add 127.0.0.1 gosgov.ru client.gosgov.ru A 38.0.101.76 -Uadmin -padmin
+
+samba-tool dns query 127.0.0.1 [domain-name] @ A # проверка на добавление записи типа A 
+
+# Записи типа PTR добавляются следующим образом:
+samba-tool dns zonecreate 127.0.0.1 [Reverse-IP].in-addr.arpa # Добавление зоны для записи 
+
+samba-tool dns zonelist 127.0.0.1 # Проверка, добавлена ли зона
+
+samba-tool dns add 127.0.0.1 [Reverse-IP].in-addr.arpa [Last-Host-NumIP] PTR [Full-Domain-Name with Hostname] 
+# Непосредственное добавление записи PTR. Пример заполнения:
+samba-tool dns add 127.0.0.1 10.10.10.in-addr.arpa 1 PTR client.gosgov.ru
+
+# Записи типа CNAME добавляются следующим образом:
+samba-tool dns add 127.0.0.1 [Domain Name] [NAME-SITE] CNAME [Full-Domain-Name with Hostname] -U[Name Admininstrator] -p[Password]
+# Добавление записи CNAME. Пример заполнения:
+samba-tool dns add 127.0.0.1 gosgov.ru www CNAME server.gosgov.ru -Uadmin -padmin
+
+# Создание групп и пользователей:
+samba-tool group add [NAME] -U[Name Admininstrator] -p[Password] 
+# Создание группы пользователей. Пример заполнения:
+samba-tool group add users -Uadmin -padmin
+
+# Создание пользователей:
+samba-tool user add [NAME] [Password] -U[Name Admininstrator] -p[Password]
+# Пример заполнения:
+samba-tool user add user resu -Uadmin -padmin
+
+# Отключение параметров EXPIRY и назначение пользователя в группу:
+samba-tool user setexpiry [NAME-USER] --noexpiry 
+# Изменение параметра EXPIRY. Пример заполнения:
+samba-tool user setexpiry user --noexpiry
+
+samba-tool group addmembers "[NAME-GROUP]" [NAME-USER] 
+# Добавление пользователя в группу. Пример заполнения:
+samba-tool group addmembers "users" user
+
+samba-tool ou add 'OU=[NAME]'
+# Добавление подразделения. Пример заполнения:
+samba-tool ou add 'OU=IT'
+                            </code></pre>
+                            <br>
+                            <p>После выполнения данных действий, домен можно считать настроенным.</p>
+                            <p>В случае, если нужен резервный домен, оставайтесь в данном разделе.</p>
+                            <pre><code class="language-bash">
+apt-get install -y task-samba-dc # установка пакета SAMBA AD 
+control bind-chroot disabled # выключаем режим CHROOT (о нем было сказано выше)
+
+systemctl disable --now smb nmb krb5kdc slapd bind 
+# Выключаем конфилктующие службы полностью. 
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf
+
+vim /etc/bind/options.conf
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes; 
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # выход из VIM с сохранением
+
+vim /etc/krb5.conf 
+> default_realm = [DOMAIN-NAME] 
+> dns_lookup_kdc = true 
+> dns_lookup_realm = false 
+
+:wq! # выход из VIM с сохранением
+
+kinit [Name Admininstrator]@[DOMAIN-NAME]
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Удаляем старые конфигурационные файлы, приватные каталоги и создаем папку SYSVOL.
+
+samba-tool domain join [DOMAIN-NAME] DC -U[Name Admininstrator] --realm=[DOMAIN-NAME] --dns-backend=BIND9_DLZ
+# Производим вход в домен.
+
+systemctl enable --now samba bind # включаем и добавляем samba в автозагрузку
+
+# Репликация и пример:
+samba-tool drs replicate [Machine DC From] [Machine DC To] dc=[Domain-2L],dc=[Domain-1L] -U[Name Admininstrator] -p[Password]
+
+# Пример заполнения:
+samba-tool drs replicate dc1.gosgov.ru dc2.gosgov.ru dc=gosgov,dc=ru -Uadmin -padmin
+                            </code></pre>
+                            <br>
+                            <p>Ниже сделаем реализацию общей папки между доменными машинами (машины, которые в домене).</p>
+                            <br>
+                            <pre><code class="language-bash">
+mkdir /opt/data # создаем общую папку
+chmod 777 /opt/data # даем максимальные права всем юзерам
+
+# Заходим в конфигурационный файл:
+vim /etc/samba/smb.conf 
+
+# Добавляем в конфигурационный файл:
+[SAMBA] 
+    path = /opt/data
+    comment = "SAMBA"
+    public = yes 
+    writable = yes
+    browseable = yes 
+    guest ok = yes
+
+:wq! # выход из VIM с сохранением
+
+systemctl restasrt samba # перезагружаем samba
+
+# Проверяем:
+smbclient -L localhost -U[NameAdmin]
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingEightAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEightAlt" aria-expanded="false" aria-controls="collapseEightAlt">
+                            Раздел 1.8: Реализация бэкапа 
+                        </button>
+                    </h2>
+                    <div id="collapseEightAlt" class="accordion-collapse collapse" aria-labelledby="headingEightAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Реализация бэкапа предполагает активация Unit типа Service на основе демонов.</p>
+                            <p>Рассматриваем вариант, если Samba AD уже реализована.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+mkdir /var/bac/ # создаем папку для бэкапа
+
+# Создаем конфигурационный файл:
+vim /etc/systemd/system/backup.service 
+
+[Unit]
+Description=Backup service /opt/data 
+
+[Service]
+Type=oneshot 
+ExecStart=/bin/tar -czf "/var/bac/SAMBA.tar.gz" /opt/data 
+
+[Install] 
+WantedBy=multi-user.target 
+
+:wq! # выход из VIM с сохранением
+
+systemctl daemon-reload # перезапуск и считывание конфигурационных файлов юнитов
+systemctl enable --now backup # включаем и добавляем backup в автозагрузку
+                                </code></pre>
+                            </div>  
+                            <br>
+                            <p>Рассмотрим Unit типа Timer.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+# Создаем конфигурационный файл:
+vim /etc/systemd/system/backup.timer 
+
+[Unit]
+Description=Backup service /opt/data Timer 
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true 
+Unit=backup.service 
+
+[Install] 
+WantedBy=timers.target 
+
+:wq! # выход из VIM с сохранением
+
+systemctl daemon-reload # перезапуск и считывание конфигурационных файлов юнитов
+systemctl enable --now backup.timer # включаем и добавляем backup.timer в автозагрузку
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingNineAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNineAlt" aria-expanded="false" aria-controls="collapseNineAlt">
+                            Раздел 1.9: Управление доменом
+                        </button>
+                    </h2>
+                    <div id="collapseNineAlt" class="accordion-collapse collapse" aria-labelledby="headingNineAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Управление доменом осуществляется при помощи пакета ADMC на графической оболочке.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+apt-get update && apt-get install -y gpupdate # установим пакет для обновления групповых политик 
+gpupdate-setup enable # включаем модуль групповых политик 
+
+# ВЫПОЛНИТЬ НА ВСЕХ МАШИНАХ, КОТОРЫЕ БУДУТ УПРАВЛЯТЬСЯ!
+
+# Выполняется на административной машине:
+apt-get install -y admc # установка пакета
+kinit [Name Admininstrator]@[DOMAIN-NAME] # производим вход в домен
+
+apt-get install -y gpui # для редактирования настроек конфигураций.
+                                </code></pre>
+                            </div>
+                            <br>
+                            <p>Для перехода в оснастку ADMC, в приложениях набираем ADMC. Чтобы перевести на русский, нажимаем Settings -> Language</p>
+                            <p>Переключаемся в оснастке на домен, выбираем "Объекты групповой политики", необходимый раздел, к примеру: IT</p>
+                            <p>Нажимаем правой кнопкой мыши на раздел и нажимаем "Создать политику и связать её с подразделением"</p>
+                            <p>В появишимся окне именуем политику и нажимаем "ОК"</p>
+                            <p>Нажимаем правой кнопкой мыши по созданной политике и нажимаем "Изменить...", ждем запуска GPUI</p>
+                            <p>Там также можно перевести на русский язык при нажатии на "Вид"</p>
+                            <p>Поменяем к примеру, фон рабочего стола:</p>
+                            <p>Выбираем "Компьютер" -> "Административные шаблоны" -> "Система ALT" -> "Настройки Mate" -> "Фон рабочего стола" -> "Картинка фона рабочего стола"</p>
+                            <p>В политике меняем состояние на "Включено" и пишем раздел "Файл", помечаем галочкой "Блокировать"</p>
+                            <p>В том же разделе "Система ALT" поменяем сетевые настройки: </p>
+                            <p>"Система ALT" -> "Правила Polkit" -> "Ограничения NetworkManager":</p>
+                            <p>"Ограничение возмодности включения или отключения сети", меняем на "Включено", "Варианты отключения" - No, "Блокировать" - помечаем</p>
+                            <br>
+                            <p>Подключение общей папки:</p>
+                            <p>Выбираем необходимый подразделение, нажимаем по нему правой кнопкой мыши, выбираем "Создать политику и связать с этим подразделением"</p>
+                            <p>В появишимся окне именуем политику и нажимаем "ОК"</p>
+                            <p>В появишимся окне нажимаем "Изменить...", ждем запуска GPUI</p>
+                            <p>Переходим в "Компьютер" -> "Настройки" -> "Настройки системы" -> "Сетевые диски"</p>
+                            <p>Заполняем: </p>
+                            <p>Действие: Обновить; Путь: [путь до папки через домен]; Переподключиться: Включено; Название: samba</p>
+                            <p>Имя диска: Использовать [Выбор буквы];</p>
+                            <p> Показать диск; Показать все диски</p>
+                            <p>Пример:</p>
+                            <p>Действие: Обновить; Путь: smb://server-name/samba; Переподключиться: Включено; Название: samba</p>
+                            <p>Имя диска: Использовать F; Показать диск; Показать все диски</p>
+                            <p>На этом все, перезагрузите компьютер и проверьте.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTenAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTenAlt" aria-expanded="false" aria-controls="collapseTenAlt">
+                            Раздел 1.10: Docker
+                        </button>
+                    </h2>
+                    <div id="collapseTenAlt" class="accordion-collapse collapse" aria-labelledby="headingTenAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Мы будем использовать контейнеры Docker для развертывания различных приложений.</p>
+                            <p><strong>Реализация Docker Registry:</strong></p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+apt-get update && apt-get install -y docker-engine # установка пакета
+systemctl enable --now docker.service # включаем и добавляем docker в автозагрузку
+
+# Запустим Docker Registry, чтобы держать образы локально:
+docker run -d -p 5000:5000 --restart=always --name DockerRegistry registry:2
+                                </code></pre>
+                            </div>
+                            <br>
+                            <p><strong>Реализация nginx</strong></p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+# Создадим Dockerfile для сборки 
+vim Dockerfile 
+
+FROM nginx:alpine 
+COPY index.html /usr/share/nginx/html 
+
+:wq! # выход из VIM с сохранением
+
+vim index.html # сделаем шаблон страницы
+&lt;html&gt;
+    &lt;body&gt;
+        &lt;center&gt;&lt;h1&gt;&lt;b&gt;WEB&lt;/b&gt;&lt;/h1&gt;&lt;/center&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+
+:wq! # выход из VIM с сохранением
+
+docker build -t localhost:5000/web:1.0 . 
+# Собираем образ в локальный регистр, созданный ранее. 
+
+docker push localhost:5000/web:1.0 # отправляем образ в регистр
+
+# Проверяем:
+docker rmi localhost:5000/web:1.0 # удаляем образ
+
+docker pull localhost:5000/web:1.0 # заново загружаем образ
+
+# Развертываем:
+docker run -d -p 80:80 --restart=always --name web localhost:5000/web:1.0 
+
+# Проверяем:
+docker ps 
+curl localhost 
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingElevenAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseElevenAlt" aria-expanded="false" aria-controls="collapseElevenAlt">
+                            Раздел 1.11: Zabbix. Система централизованного мониторинга. 
+                        </button>
+                    </h2>
+                    <div id="collapseElevenAlt" class="accordion-collapse collapse" aria-labelledby="headingElevenAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Развертывание Zabbix на основе отдельного пакета без использования Docker.</p>
+                            <p>Подобные действия гарантируют полноценную работу системы централизованного мониторинга.</p>
+                            <p>В качестве базы данных используется PostgreSQL</p>
+                            <br>
+                            <pre><code class="language-bash">
+apt-get update && apt-get install -y postgresql16-server zabbix-server-pgsql  
+# Установка необходимых пакетов. 
+
+/etc/init.d/postgresql initdb # создание системных баз для работы PostgreSQL
+
+systemctl enable --now postgresql.service # включаем и добавляем postgresql в автозагрузку
+
+su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted -pwprompt zabbix'
+# Создание пользователя zabbix
+
+su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+# Создание базы данных zabbix
+
+systemctl restart postgresql.service # перезагружаем postgresql
+
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/schema.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/images.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/data.sql zabbix'
+# Заполняем базу данных для веб-интерфейса.
+
+apt-get install -y apache2 apache2-mod_php8.2 # установка пакетов для веб-сервера apache2 
+systemctl enable --now httpd2 # включаем и добавляем httpd2 в автозагрузку
+
+apt-get install -y php8.2 php8.2-{mbstring,sockets,gd,xmlreader,pgsql,ldap,openssl} 
+# Устанавливаем PHP и необходимые модули. 
+
+# Меняем опции внутри конфигурационного файла:
+vim /etc/php/8.2/apache2-mod_php/php.ini 
+
+> max_execution_time = 600
+> max_input_time = 600
+> memory_limit = 256M
+> post_max_size = 32M
+> date.timezone = Europe/Moscow
+> always_populate_raw_post_data = -1
+
+:wq! # выход из VIM с сохранением
+
+systemctl restart httpd2 # перезагружаем httpd2
+
+# Правим конфигурационный файл Zabbix:
+vim /etc/zabbix/zabbix_server.conf
+
+DBHost = localhost 
+DBName = zabbix
+DBUser = zabbix
+DBPassword = zabbixpwd
+
+:wq! # выход из VIM с сохранением
+
+systemctl enable --now zabbix_pgsql # включаем и добавляем zabbix_pgsql в автозагрузку
+
+apt-get install -y zabbix-phpfrontend-{apache2,php8.2}
+# Устанавливаем веб-интерфейс Zabbix.
+
+ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+# Включаем Addons в Apache2 
+
+chown apache2:apache2 /var/www/webapps/zabbix/ui/conf 
+# Изменяем права к конфигурационному каталогу для веб-интерфейса, чтобы он мог изменяться им же. 
+
+systemctl restart httpd2 # перезагружаем httpd2
+
+# Переходим на веб-страницу Zabbix и настраиваем по всем этапам.
+
+# Для агентов Zabbix: 
+apt-get install -y zabbix-agent # установка пакета
+
+vim /etc/zabbix/zabbix_agentd.conf
+
+Server = [IP Server]
+ServerActive = [IP Server]
+Hostname = [FullHostname]
+
+:wq! # выход из VIM с сохранением
+
+systemctl enable --now zabbix_agentd.service # включаем и добавляем zabbix_agentd в автозагрузку
+
+# На сервере можем добавить всех агентов: 
+Переход на веб-интерфейс Zabbix -> Monitoring -> Hosts -> Create host
+Заполняем информацию:
+Host name: [FullHostname]
+Visible name: [FullHostname]
+Templates: [Linux by Zabbix agent]
+Groups: [Linux servers OR ANY] 
+Interfaces: Agent [IP] [Fullhostname] [ConnectIP]
+Нажимаем "Add"
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwelveAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwelveAlt" aria-expanded="false" aria-controls="collapseTwelveAlt">
+                            Раздел 1.12: Настройка веб-сервера nginx 
+                        </button>
+                    </h2>
+                    <div id="collapseTwelveAlt" class="accordion-collapse collapse" aria-labelledby="headingTwelveAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Развертывание веб-сервера nginx на основе отдельного пакета без использования Docker.</p>
+                            <p>Будем использовать его как обратный прокси-сервер</p>
+                            <br>
+                            <pre><code class="language-bash">
+apt-get install -y nginx # установка пакета
+
+# Создадим и отредактируем конфигурационный файл:
+vim /etc/nginx/sites-available.d/proxy.conf 
+
+server {
+    listen 80;
+    server_name www.[domain-L2].[domain-L1];
+    location / {
+        proxy_pass http://[IP];
+    }
+}
+
+server {
+    listen 80;
+    server_name zabbix.[domain-L2].[domain-L1];
+    location / {
+        proxy_pass http://[IP]/zabbix;
+    }
+}
+
+:wq! # выход из VIM с сохранением
+
+ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+# Включаем конфигурационный файл в конфигурационный каталог как символическую ссылку.
+
+nginx -t # проверка корректности конфигурационного файла
+
+systemctl enable --now nginx # включаем и добавляем nginx в автозагрузку
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThirteenAlt">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThirteenAlt" aria-expanded="false" aria-controls="collapseThirteenAlt">
+                            Раздел 1.14: Узел управления Ansible 
+                        </button>
+                    </h2>
+                    <div id="collapseThirteenAlt" class="accordion-collapse collapse" aria-labelledby="headingThirteenAlt" data-bs-parent="#AccordionAlt">
+                        <div class="accordion-body">
+                            <p>Развертывание узла управления Ansible на основе отдельного пакета без использования Docker.</p>
+                            <br>
+                            <pre><code class="language-bash">
+# Установка Ansible
+apt-get install -y ansible sshpass
+
+chown -R root:user /etc/ansible 
+chmod -R /etc/ansible 
+
+# Из-под обычного пользователя переходим в директорию /etc/ansible 
+cd /etc/ansible
+
+# Создадим инвентарный файл:
+vim inventory 
+
+all:
+    inventory:
+        Networking:
+            hosts:
+                ANY-ROUTE-NAME:
+        
+        Servers:
+            hosts:
+                ANY-ROUTE-NAME:
+        
+        Clients:
+            hosts:
+                ANY-ROUTE-NAME:
+
+:wq! # выход из VIM с сохранением
+
+# Создадим и отредактируем конфигурационный файл:
+vim /etc/ansible/ansible.cfg
+
+[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False
+
+:wq! # выход из VIM с сохранением
+
+# Настраиваем доступ ко всем устройствам:
+
+mkdir group_vars
+cat <<EOF > group_vars/all.yml
+    ansible_ssh_user: sshuser 
+    ansible_ssh_pass: P@ssw0rd
+    ansible_python_interpreter: /usr/bin/python3
+EOF
+cat <<EOF > group_vars/Networking.yml 
+    ansible_connection: network_cli 
+    ansible_network_os: ios
+EOF
+
+# Пробуем:
+ansible -m ping all
+                        </code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Раздел 2 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Раздел 2: Cisco Packet Tracer
+            </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>Данный раздел содержит информацию о Cisco Packet Tracer (далее CPT).</strong>
+                <p>Выберите необходимый подраздел.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionCPT">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCPT" aria-expanded="false" aria-controls="collapseOneCPT">
+                            Раздел 2.1: Базовые настройки
+                        </button>
+                    </h2>
+                    <div id="collapseOneCPT" class="accordion-collapse collapse" aria-labelledby="headingOneCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p>Базовая настройка CPT будет включать очень мало параметров, но все-таки необходимых для дальнейших действий внутри системы коммутаторов и роутеров.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+en # переход в привилегированный режим, иначе ничего сделать не сможем
+conf t # переход в режим конфигурации
+hostname [NAME]                      
+ip domain-name [DOMAIN]              
+# Мы здесь опять же указываем домен. Каждая машина именуется доменом, а в случае обычных вариантов, домен не указывается.
+# Они связаны будут рабочей группой.
+
+# Указание настроек DNS: 
+conf t # переход в режим конфигурации
+ip name-server [First IP DNS-server] # Указываем первый DNS
+ip name-server [Second IP DNS-server] # Указываем второй DNS
+ip domain-name [DOMAIN] # Указываем домен
+write # запись конфигурации
+
+# Указываем NTP: 
+conf t # переход в режим конфигурации
+ntp server [IP NTP Server] # Указываем NTP сервер
+ntp timezone [TIMEZONE] # Указываем часовой пояс (формат UTC)
+write # запись конфигурации
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwoCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoCPT" aria-expanded="false" aria-controls="collapseTwoCPT">
+                            Раздел 2.2: Адресация
+                        </button>
+                    </h2>
+                    <div id="collapseTwoCPT" class="accordion-collapse collapse" aria-labelledby="headingTwoCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p>Адресация устройств основана на интерфейсах и портах.</p>
+                            <br>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+show port brief # Команда, показывающая подключенные порты.
+
+conf t # переход в режим конфигурации
+interface [Название интерфейса]/[VLAN ID] 
+desc "[Описание/Цель]"
+ip address [Адрес]/[Битовая маска] # Указываем первый адрес, который будет шлюзом в дальнейшем при ваших настройках уже на системах. 
+
+port te[N] # переход на нужный порт, который будет смотреть в сторону остальных устройств
+service-instance te[N]/[INTERFACE] # создаем сервисную инстанцию на основе порт -> интерфейс
+encapsulation dot1q [VLAN] exact # задаем инкапсуляцию с учетом того, если это VLAN
+rewrite pop 1 # перезапись настроек интерфейса
+connect ip interface [INT-VLAN] # присоединения назначенного IP на интерфейс к сервисной инстанции
+
+P.S. если это интерфейс, а не именно VLAN, то: encapsulation untagged
+# Приведем полноценные настройки, если это все-таки интерфейс, а не VLAN:
+
+conf t # переход в режим конфигурации
+interface [INT] # переход на интерфейс
+desc "[Описание/Цель]" # назначение описания
+ip address [Адрес]/[Битовая маска] # назначение IP адреса 
+
+port te[N] # переход на порт
+service-instance te[N]/[INT] # переход на сервисную инстанцию 
+encapsulation untagged # создание нетэгирированной инкапсуляции
+connect ip interface [INT] # присоединение IP интерфейса к сервисной инстанции
+write # запись в конфигурационный файл
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThreeCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThreeCPT" aria-expanded="false" aria-controls="collapseThreeCPT">
+                            Раздел 2.3: Настройка подключения к провайдеру
+                        </button>
+                    </h2>
+                    <div id="collapseThreeCPT" class="accordion-collapse collapse" aria-labelledby="headingThreeCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> Подключение маршрутизатора к провайдеру основывается на сервисных инстанциях.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # переход в режим конфигурации                                    
+int [NAME] # переход на интерфейс
+ip address [IP]/[Mask] # назначение адреса в сторону провайдера
+exit # выход из интерфейса
+
+port te[N] # указываем номер порта, смотрящий в сторону провайдера
+service-instance te[N]/[INT] # указываем номер порта, смотрящий в сторону провайдера и указываем сделанный интерфейс. Тем самым, создаем сервисную инстанцию. 
+encapsulation untagged # делаем нетэгирированную инкапсуляцию
+connect ip interface [INT] # назначаем подключение IP и указываем название создаваемого интерфейса
+exit # выход из инстанции
+exit # выход из настройки порта
+
+ip route 0.0.0.0/0 [IP-Gateway-R] # смотреть пункт 1
+write # запись конфигурации
+
+show ip route static - просматриваем маршруты на маршрутизаторе
+                                </code></pre>
+                            <p> Пункт 1: где IP-Gateway-R - указываем IP адрес шлюза и основного IP адрес адаптера со стороны провайдера, он будет шлюзом.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFourCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFourCPT" aria-expanded="false" aria-controls="collapseFourCPT">
+                            Раздел 2.4: Настройка NAT
+                        </button>
+                    </h2>
+                    <div id="collapseFourCPT" class="accordion-collapse collapse" aria-labelledby="headingFourCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> NAT - необходим для распределения пакетов по сети и мы будем рассматривать конфигурацию на основе базовых интерфейсов.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # переход в режим конфигурации
+interface [INT] # переход на интерфейс                           
+ip nat [OUTSIDE/INSIDE] 
+# Указываем outside - если необходимо брать пакеты оттуда, чаще всего там сеть (провайдер). 
+# Указываем inside - если отправляем пакеты, там остальные устройства.
+
+ip nat pool [NAME] [IPFirst]-[IP-End] # Создаем пул адресов
+ip nat source dynamic inside pool [NAME] overload [IP-адрес R] # смотреть пункт 1
+                                </code></pre>
+                                <p> Пункт 1: Где IP-адрес R - указываем IP адрес от провайдера данный маршрутизатору.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingFiveCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiveCPT" aria-expanded="false" aria-controls="collapseFiveCPT">
+                            Раздел 2.5: Настройка DHCP
+                        </button>
+                    </h2>
+                    <div id="collapseFiveCPT" class="accordion-collapse collapse" aria-labelledby="headingFiveCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> DHCP - необходим для распределения IP адресов.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # переход в режим конфигурации
+ip pool [NAME] [IPFirst]-[IP-End] # Создаем пул адресов
+dhcp-server 1 # переход в режим настройки DHCP
+pool [NAME] 1 # назначаем пул адресов
+mask [MASK in Bit] # назначаем битовую маску
+gateway [IP-Gateway] # назначаем шлюз
+dns [IP],[OR ANY IP] # указываем DNS сервера, к которому обращается пул
+domain-name [DOMAIN] # назначаем домен
+exit # выход из режима настройки пула адресов
+exit # выход из режима настройки DHCP сервера
+
+interface [INT] # переход на интерфейс
+dhcp-server 1 # включаем на интерфейсе DHCP сервер
+exit # выход из интерфейса
+write # запись конфигурации
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSixCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixCPT" aria-expanded="false" aria-controls="collapseSixCPT">
+                            Раздел 2.6: Конфигурация IP Tunneling
+                        </button>
+                    </h2>
+                    <div id="collapseSixCPT" class="accordion-collapse collapse" aria-labelledby="headingSixCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> Туннелирование предполагает подключение одного маршрутизатора к другому посредством перенаправления пакетов через провайдера.</p>
+                            <p> Как правило, пакеты не задерживаются у провайдера, а моментально находят получателя, минуя провайдера - поэтому на стороне провайдера, пакета не будет видно.</p>
+                            <pre><code class="language-bash">
+conf t # переход в режим конфигурации
+interface tunnel.0 # переход на интерфейс туннеля
+desc "[Описание/Цель]" # назначение описания
+ip add [IP]/[MASK] # назначаем IP адрес
+ip mtu [MTU] # назначаем MTU
+ip tunnel [IP from Provider] [IP Second Router from Provider] mode gre # Назначаем туннель между маршрутизаторами
+end # завершить полностью настройку и выйти из режима конфигурации
+write # запись конфигурации
+# где указываются IP, там указываются IP адреса маршрутизаторов, смотрящие в сторону провайдера
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSevenCPT">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSevenCPT" aria-expanded="false" aria-controls="collapseSevenCPT">
+                            Раздел 2.7: Конфигурация OSPF 
+                        </button>
+                    </h2>
+                    <div id="collapseSevenCPT" class="accordion-collapse collapse" aria-labelledby="headingSevenCPT" data-bs-parent="#AccordionCPT">
+                        <div class="accordion-body">
+                            <p> OSPF - необходим для распределения пакетов по сети.</p>
+                            <div class="card-body">
+                                <pre><code class="language-bash">
+conf t # переход в режим конфигурации
+router ospf 1 # переход в режим настройки OSPF
+ospf router-id [Personal IP from Router] # назначение ID маршрутизатора
+passive-interface default # назначение интерфейса по умолчанию
+network [IP] [Hosts] area 0 # назначение сети
+no passive-interface tunnel.0 # отклчюаем пассивный режим на туннеле. ЕСЛИ ОН НАСТРОЕН! Если не настроен, делать этого не нужно
+exit # выход из режима настройки OSPF
+exit # выход из режима конфигурации
+write # запись конфигурации
+
+# Пример указания сети:
+network 192.168.1.0 0.0.0.255 area 0
+
+# Обеспечивание защиты протокола OSPF посредством парольной защиты:
+conf t # переход в режим конфигурации
+interface tunnel.0 # переход на интерфейс туннеля
+ip ospf auth message-digest # переход на режим парольной защиты
+ip ospf message-digest-key 1 md5 [ANY PASS] # назначение пароля с хэшем MD5 
+exit # выход из интерфейса
+write # запись конфигурации
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+    </div>
+
+    <!-- Раздел 3 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Раздел 3: Кастомный Брандмауэр (Firewall)
+            </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>Раздел, отвечающий за кастомный брандмауэр на замену станционарным внутри системы.</strong>
+                <p data-bs-toggle="tooltip" data-bs-title="на самом деле, это ОС - Ideco NGFW" data-bs-placement="left">Firewall Graphical User Interface (Firewall GUI, а далее FirewallG) является брандмауэром, использующий графический интерфейс.</p>
+            </div>
+            <div class="accordion nested-accordion" id="AccordionFirewallG"> 
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOneFirewallG">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneFirewallG" aria-expanded="false" aria-controls="collapseOneFirewallG">
+                            Раздел 3.1: Базовые настройки
+                        </button>
+                    </h2>
+                    <div id="collapseOneFirewallG" class="accordion-collapse collapse" aria-labelledby="headingOneFirewallG" data-bs-parent="#AccordionFirewallG">
+                        <div class="accordion-body">
+                            <p>Базовая настройка FirewallG располагает к себе тем, что вся основа брандмауэра - это графический интерфейс и ничего сложного в этом не будет.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Раздел 4 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingFour">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Раздел 4: Cyber Backup
+            </button>
+        </h2>
+        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#docsAccordion">
+            <div class="accordion-body">
+                <strong>Это раздел с примерами.</strong> Здесь можно привести примеры использования вашего продукта или API.
+            </div>
+        </div>
+    </div>
+
+    <!-- Аккордеон с картинками и кодом -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingExample">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            Раздел 5: Пример кода
+        </button>
+    </h2>
+    <div id="collapseExample" class="accordion-collapse collapse" aria-labelledby="headingExample" data-bs-parent="#docsAccordion">
+        <div class="accordion-body">
+            <p><strong>Вот пример кода с изображением:</strong></p>
+            <!-- Карточка с кодом -->
+            <div class="card-body">
+                <pre><code class="language-python">
+def hello_world():
+print("Hello, World!")
+
+hello_world()
+                </code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
