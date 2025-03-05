@@ -285,8 +285,8 @@ systemctl restart network && systemctl enable --now bind # restart necessary ser
                 </div>
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingSixAlt">
-<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixAlt" aria-expanded="false" aria-controls="collapseSixAlt">
-Adapter 1.6: NTP protocol. Raising your server based on the NTP protocol.
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSixAlt" aria-expanded="false" aria-controls="collapseSixAlt">
+                            Chapter 1.6: NTP protocol. Raising your server based on the NTP protocol.
                         </button>
                     </h2>
                     <div id="collapseSixAlt" class="accordion-collapse collapse" aria-labelledby="headingSixAlt" data-bs-parent="#AccordionAlt">
@@ -317,6 +317,585 @@ vim /etc/chrony.conf
 
 systemctl enable --now chronyd # enabling and adding chronyd to startup
                             </code></pre>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingSevenAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSevenAlt" aria-expanded="false" aria-controls="collapseSevenAlt">
+                                Chapter 1.7: SAMBA AD Domain Infrastructure
+                            </button>
+                        </h2>
+                        <div id="collapseSevenAlt" class="accordion-collapse collapse" aria-labelledby="headingSevenAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>We fully devote our time to a separate section, which will contain settings designed for the Samba domain infrastructure.</p>
+                                The performance of Samba depends entirely on the configured BIND, and if suddenly it doesn't work, then the domain won't work either.</p>
+                                <p>If BIND swears at /etc/bind/named.conf files, then do the following:</p>
+                                <pre><code class="language-bash">
+    control bind-chroot disabled
+    # # Setting this setting completely disables BIND's sudden uncontrolled behavior.
+    # If it is not disabled, BIND uses the "CHROOT" mode, although it has its own user.
+                                </code></pre>
+                                <br>
+                                <p>Перейдем к самой настройке Samba AD</p>
+                                <br>
+                                <pre><code class="language-bash">
+    apt-get install -y task-samba-dc # installing the SAMBA AD package
+    control bind-chroot disabled # turn off the CHROOT mode (mentioned above)
+    
+    grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind 
+    # Disabling the krb5kdc cache type from BIND, thereby providing Samba access to the Kerberos protocol.
+    
+    grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf 
+    # We enter file names from Samba to the main BIND file.
+    
+    # Edit the file responsible for BIND:
+    vim /etc/bind/options.conf 
+    > tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+    > minimal-responses yes; 
+    
+    > logging { 
+    > category lame-servers { null; };
+    > }
+    
+    :wq! # выход из VIM с сохранением
+    
+    # Disable logging, enter the KEY KEY and enable minimal responses.
+    
+    systemctl stop bind # stopping BIND
+    
+    rm -f /etc/samba/smb.conf 
+    rm -rf /var/lib/samba
+    rm -rf /var/cache/samba
+    mkdir -p /var/lib/samba/sysvol 
+    # Delete the old configuration files, private directories, and create the SYSVOL folder.
+    
+    samba-tool domain provision # initializing the domain. 
+    # IMPORTANT! When choosing the module, because we used DNS in the early settings:
+    # DNS backend: BIND9_DLZ 
+    
+    systemctl enable --now samba && systemctl start bind 
+    # Launching Samba AD with the addition of autorun and bind
+    
+    cp /var/lib/samba/private/krb5.conf /etc/krb5.conf # copy the Kerberos configuration file from the Samba private directory to the main one.
+    
+    # Adding records like A, PTR, and CNAME:
+    
+    # Records of type A are added as follows:
+    samba-tool dns add 127.0.0.1 [domain-name] [machine-name] A [IP machine] -U[Name Admininstrator] -p[Password]
+    # Adding entry A. Example of filling in:
+    samba-tool dns add 127.0.0.1 gosgov.ru client.gosgov.ru A 38.0.101.76 -Uadmin -padmin
+    
+    samba-tool dns query 127.0.0.1 [domain-name] @ A # checking for adding an entry of type A
+    
+    # PTR type records are added as follows:
+    samba-tool dns zonecreate 127.0.0.1 [Reverse-IP].in-addr.arpa # Adding a recording zone 
+        
+    samba-tool dns zonelist 127.0.0.1 # Checking if a zone has been added
+    
+    samba-tool dns add 127.0.0.1 [Reverse-IP].in-addr.arpa [Last-Host-NumIP] PTR [Full-Domain-Name with Hostname] 
+    # Directly adding a PTR record. Example of filling in:
+    samba-tool dns add 127.0.0.1 10.10.10.in-addr.arpa 1 PTR client.gosgov.ru
+    
+    # CNAME type records are added as follows:
+    samba-tool dns add 127.0.0.1 [Domain Name] [NAME-SITE] CNAME [Full-Domain-Name with Hostname] -U[Name Admininstrator] -p[Password]
+    # Adding a CNAME record. Example of filling in:
+    samba-tool dns add 127.0.0.1 gosgov.ru www CNAME server.gosgov.ru -Uadmin -padmin
+    
+    # Create groups and users:
+    samba-tool group add [NAME] -U[Name Admininstrator] -p[Password] 
+    # Create a user group. Example of filling in:
+    samba-tool group add users -Uadmin -padmin
+    
+    # Create Users:
+    samba-tool user add [NAME] [Password] -U[Name Admininstrator] -p[Password]
+    # Example of filling in:
+    samba-tool user add user resu -Uadmin -padmin
+    
+    # Disabling EXPIRATION options and assigning a user to a group:
+    samba-tool user setexpiry [NAME-USER] --noexpiry 
+    # Change the EXPIRATION parameter. Example of filling in:
+    samba-tool user setexpiry user --noexpiry
+    
+    samba-tool group addmembers "[NAME-GROUP]" [NAME-USER] 
+    # Adding a user to a group. Example of filling in:
+    samba-tool group addmembers "users" user
+    
+    samba-tool ou add 'OU=[NAME]'
+    # Adding a division. Example of filling in:
+    samba-tool ou add 'OU=IT'
+                                </code></pre>
+                                <br>
+                                <p>After performing these actions, the domain can be considered configured.</p>
+                                <p>If you need a backup domain, stay in this section.</p>
+                                <pre><code class="language-bash">
+apt-get install -y task-samba-dc # installing the SAMBA AD package 
+control bind-chroot disabled # turn off the CHROOT mode (mentioned above)
+
+systemctl disable --now smb nmb krb5kdc slapd bind 
+# Turn off conflicting services completely. 
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf
+
+vim /etc/bind/options.conf
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes; 
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # exiting VIM with saving
+
+vim /etc/krb5.conf 
+> default_realm = [DOMAIN-NAME] 
+> dns_lookup_kdc = true 
+> dns_lookup_realm = false 
+
+:wq! # exiting VIM with saving
+
+kinit [Name Admininstrator]@[DOMAIN-NAME]
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Delete the old configuration files, private directories, and create the SYSVOL folder.
+
+samba-tool domain join [DOMAIN-NAME] DC -U[Name Admininstrator] --realm=[DOMAIN-NAME] --dns-backend=BIND9_DLZ
+# Log in to the domain.
+
+systemctl enable --now samba bind # enable and add samba to startup
+
+# Replication and example:
+samba-tool drs replicate [Machine DC From] [Machine DC To] dc=[Domain-2L],dc=[Domain-1L] -U[Name Admininstrator] -p[Password]
+
+# Example of filling in:
+samba-tool drs replicate dc1.gosgov.ru dc2.gosgov.ru dc=gosgov,dc=ru -Uadmin -padmin
+                                </code></pre>
+                                <br>
+                                <p>Below we will implement a shared folder between domain machines (machines that are in the domain).</p>
+                                <br>
+                                <pre><code class="language-bash">
+mkdir /opt/data # create a shared folder
+chmod 777 /opt/data # give maximum rights to all users
+
+# Go to the configuration file:
+vim /etc/samba/smb.conf 
+
+# Add to the configuration file:
+[SAMBA] 
+    path = /opt/data
+    comment = "SAMBA"
+    public = yes 
+    writable = yes
+    browseable = yes 
+    guest ok = yes
+
+:wq! # exiting VIM with saving
+
+systemctl restart samba # restart samba
+
+# Checking:
+smbclient -L localhost -U[NameAdmin]
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingEightAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEightAlt" aria-expanded="false" aria-controls="collapseEightAlt">
+                                Chapter 1.8: Backup Implementation
+                            </button>
+                        </h2>
+                        <div id="collapseEightAlt" class="accordion-collapse collapse" aria-labelledby="headingEightAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>The backup implementation involves the activation of a daemon-based Service type Unit.</p>
+                                <p>We are considering the option if Samba AD is already implemented.</p>
+                                <br>
+                                <div class="card-body">
+                                    <pre><code class="language-bash">
+mkdir /var/bac/ # creating a backup folder
+    
+# Creating a configuration file:
+vim /etc/systemd/system/backup.service 
+
+[Unit]
+Description=Backup service /opt/data 
+
+[Service]
+Type=oneshot 
+ExecStart=/bin/tar -czf "/var/bac/SAMBA.tar.gz" /opt/data 
+
+[Install] 
+WantedBy=multi-user.target 
+
+:wq! # exiting VIM with saving
+
+systemctl daemon-reload # restarting and reading unit configuration files
+systemctl enable --now backup # enabling and adding backup to startup
+                                    </code></pre>
+                                </div>  
+                                <br>
+                                <p>Consider a Timer type Unit.</p>
+                                <br>
+                                <div class="card-body">
+                                    <pre><code class="language-bash">
+# Creating a configuration file:
+vim /etc/systemd/system/backup.timer 
+
+[Unit]
+Description=Backup service /opt/data Timer 
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true 
+Unit=backup.service 
+
+[Install] 
+WantedBy=timers.target 
+
+:wq! # exiting VIM with saving
+
+systemctl daemon-reload # restarting and reading unit configuration files
+systemctl enable --now backup.timer # enable and add backup.timer to startup
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingNineAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNineAlt" aria-expanded="false" aria-controls="collapseNineAlt">
+                                Chapter 1.9: Domain Management
+                            </button>
+                        </h2>
+                        <div id="collapseNineAlt" class="accordion-collapse collapse" aria-labelledby="headingNineAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>The domain is managed using the ADMC package on a graphical shell.</p>
+                                <br>
+                                <div class="card-body">
+                                    <pre><code class="language-bash">
+    apt-get update && apt-get install -y gpupdate # let's install a package for updating group policies
+    gpupdate-setup enable # enabling the group policy module
+    
+    # RUN ON ALL THE MACHINES THAT WILL BE CONTROLLED!
+    
+    # Running on an administrative machine:
+    apt-get install -y admc # installing the package
+    kinit [Name Admininstrator]@[DOMAIN-NAME] # getting a Kerberos ticket
+    
+    apt-get install -y gpui # to edit configuration settings.
+                                    </code></pre>
+                                </div>
+                                <br>
+                                <p>To switch to the ADMC snap-in, type ADMC in the applications. To translate it into Russian, click Settings -> Language</p>
+                                <p>Switch to the domain in the snap-in, select "Group Policy Objects", the necessary section, for example: IT</p>
+                                <p>Right-click on the section and click "Create a policy and link it to a division"</p>
+                                <p>In the window that appears, name the policy and click "OK"</p>
+                                <p>Right-click on the created policy and click "Edit...", waiting for GPUI to launch</p>
+                                <p>It can also be translated into Russian by clicking on "View"</p>
+                                <p>For example, let's change the desktop background.:</p>
+                                <p>Select "Computer" -> "Administrative Templates" -> "ALT System" -> "Mate Settings" -> "Desktop Background" -> "Desktop Background picture"</p>
+                                <p>In the policy, we change the status to "Enabled" and write the "File" section, tick "Block"</p>
+                                <p>In the same section "ALT system" we will change the network settings: </p>
+                                <p>"ALT System" -> "Polkit Rules" -> "NetworkManager Restrictions":</p>
+                                <p>"Limitation of the mode of enabling or disabling the network", change to "Enabled", "Disable options" - No, "Block" - mark</p>
+                                <br>
+                                <p>Connecting a shared folder:</p>
+                                <p>Select the necessary department, right-click on it, select "Create a policy and link to this department"</p>
+                                <p>In the window that appears, name the policy and click "OK"</p>
+                                <p>In the window that appears, click "Edit...", waiting for the GPUI to start</p>
+                                <p>Go to "Computer" -> "Settings" -> "System Settings" -> "Network drives"</p>
+                                <p>Fill in: </p>
+                                <p>Action: Update; Path: [folder path via domain]; Reconnect: Enabled; Name: samba</p>
+                                <p>Disk Name: Use [Letter Selection];</p>
+                                <p> Show disk; Show all disks</p>
+                                <p>Example:</p>
+                                <p>Action: Update; Path: smb://server-name/samba; Reconnect: Enabled; Name: samba</p>
+                                <p>Disk Name: Use F; Show Disk; Show all disks</p>
+                                <p>That's it, restart your computer and check.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTenAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTenAlt" aria-expanded="false" aria-controls="collapseTenAlt">
+                                Chapter 1.10: Docker
+                            </button>
+                        </h2>
+                        <div id="collapseTenAlt" class="accordion-collapse collapse" aria-labelledby="headingTenAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>We will use Docker containers to deploy various applications.</p>
+                                <p><strong>Docker Registry implementation:</strong></p>
+                                <div class="card-body">
+                                    <pre><code class="language-bash">
+    apt-get update && apt-get install -y docker-engine # installing the package
+    systemctl enable --now docker.service # enabling and adding docker to startup
+    
+    # Let's launch the Docker Registry to keep the images locally.:
+    docker run -d -p 5000:5000 --restart=always --name DockerRegistry registry:2
+                                    </code></pre>
+                                </div>
+                                <br>
+                                <p><strong>Realization nginx</strong></p>
+                                <div class="card-body">
+                                    <pre><code class="language-bash">
+    # Create Dockerfile for build 
+    vim Dockerfile 
+    
+    FROM nginx:alpine 
+    COPY index.html /usr/share/nginx/html 
+    
+    :wq! # exit from VIM with save
+    
+    vim index.html # make a template page
+    &lt;html&gt;
+        &lt;body&gt;
+            &lt;center&gt;&lt;h1&gt;&lt;b&gt;WEB&lt;/b&gt;&lt;/h1&gt;&lt;/center&gt;
+        &lt;/body&gt;
+    &lt;/html&gt;
+    
+    :wq! # exit from VIM with save
+    
+    docker build -t localhost:5000/web:1.0 . 
+    # Build an image in the local registry
+    
+    docker push localhost:5000/web:1.0 # upload the image
+    
+    # Checking:
+    docker rmi localhost:5000/web:1.0 # delete the image
+    
+    docker pull localhost:5000/web:1.0 # reload the image
+    
+    # Launch:
+    docker run -d -p 80:80 --restart=always --name web localhost:5000/web:1.0 
+    
+    # Check:
+    docker ps 
+    curl localhost 
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingElevenAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseElevenAlt" aria-expanded="false" aria-controls="collapseElevenAlt">
+                                Chapter 1.11: Zabbix. Centralized monitoring system.
+                            </button>
+                        </h2>
+                        <div id="collapseElevenAlt" class="accordion-collapse collapse" aria-labelledby="headingElevenAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>Zabbix deployment based on a separate package without using Docker.</p>
+                                <p>Such actions guarantee the full operation of the centralized monitoring system.</p>
+                                <p>PostgreSQL is used as the database</p>
+                                <br>
+                                <pre><code class="language-bash">
+    apt-get update && apt-get install -y postgresql16-server zabbix-server-pgsql  
+    # Install the necessary packages.
+    
+    /etc/init.d/postgresql initdb # creating system databases for PostgreSQL operation
+    
+    systemctl enable --now postgresql.service # enabling and adding postgresql to startup
+    
+    su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted -pwprompt zabbix'
+    # Create user zabbix
+    
+    su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+    # Create database zabbix
+    
+    systemctl restart postgresql.service # reboot postgresql
+    
+    su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/schema.sql zabbix'
+    su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/images.sql zabbix'
+    su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/data.sql zabbix'
+    # Fill in the database for the web interface.
+    
+    apt-get install -y apache2 apache2-mod_php8.2 # installing the package apache2 and addon apache2 mod_php
+    systemctl enable --now httpd2 # enabling and adding httpd2 to startup
+    
+    apt-get install -y php8.2 php8.2-{mbstring,sockets,gd,xmlreader,pgsql,ldap,openssl} 
+    # installing the package php
+    
+    # Edit configuration file php.ini:
+    vim /etc/php/8.2/apache2-mod_php/php.ini 
+    
+    > max_execution_time = 600
+    > max_input_time = 600
+    > memory_limit = 256M
+    > post_max_size = 32M
+    > date.timezone = Europe/Moscow
+    > always_populate_raw_post_data = -1
+    
+    :wq! # exit from VIM with save
+    
+    systemctl restart httpd2 # reboot httpd2
+    
+    # Edit configuration file zabbix_server.conf:
+    vim /etc/zabbix/zabbix_server.conf
+    
+    DBHost = localhost 
+    DBName = zabbix
+    DBUser = zabbix
+    DBPassword = zabbixpwd
+    
+    :wq! # exit from VIM with save
+    
+    systemctl enable --now zabbix_pgsql # enabling and adding zabbix_pgsql to startup
+    
+    apt-get install -y zabbix-phpfrontend-{apache2,php8.2}
+    # installing the package zabbix-phpfrontend
+    
+    ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+    # creating a symbolic link
+    
+    chown apache2:apache2 /var/www/webapps/zabbix/ui/conf 
+    # changing ownership
+    
+    systemctl restart httpd2 # reboot httpd2
+
+    # We go into the Zabbix web interface and configure it step by step.
+    
+    # For agents Zabbix: 
+    apt-get install -y zabbix-agent # installing package
+    
+    vim /etc/zabbix/zabbix_agentd.conf
+    
+    Server = [IP Server]
+    ServerActive = [IP Server]
+    Hostname = [FullHostname]
+    
+    :wq! # exit from VIM with save
+    
+    systemctl enable --now zabbix_agentd.service # enabling and adding zabbix_agentd to startup
+    
+    # On the server, we can add all agents:
+    In the web interface: Zabbix -> Monitoring -> Hosts -> Create host
+    Filling in the information:
+    Host name: [FullHostname]
+    Visible name: [FullHostname]
+    Templates: [Linux by Zabbix agent]
+    Groups: [Linux servers OR ANY] 
+    Interfaces: Agent [IP] [Fullhostname] [ConnectIP]
+    Click "Add"
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwelveAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwelveAlt" aria-expanded="false" aria-controls="collapseTwelveAlt">
+                                Chapter 1.12: Configuring the nginx web Server
+                            </button>
+                        </h2>
+                        <div id="collapseTwelveAlt" class="accordion-collapse collapse" aria-labelledby="headingTwelveAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>nginx web server deployment based on a separate package without using Docker.</p>
+                                <p>We will use it as a reverse proxy server</p>
+                                <br>
+                                <pre><code class="language-bash">
+    apt-get install -y nginx # installing the package
+    
+    # Create and edit the configuration file:
+    vim /etc/nginx/sites-available.d/proxy.conf 
+    
+    server {
+        listen 80;
+        server_name www.[domain-L2].[domain-L1];
+        location / {
+            proxy_pass http://[IP];
+        }
+    }
+    
+    server {
+        listen 80;
+        server_name zabbix.[domain-L2].[domain-L1];
+        location / {
+            proxy_pass http://[IP]/zabbix;
+        }
+    }
+    
+    :wq! # exit from VIM with save
+    
+    ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+    # creating a symbolic link
+    
+    nginx -t # checking the correctness of the configuration file
+    
+    systemctl enable --now nginx # enabling and adding nginx to startup
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThirteenAlt">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThirteenAlt" aria-expanded="false" aria-controls="collapseThirteenAlt">
+                                Chapter 1.14: Ansible Management Node
+                            </button>
+                        </h2>
+                        <div id="collapseThirteenAlt" class="accordion-collapse collapse" aria-labelledby="headingThirteenAlt" data-bs-parent="#AccordionAlt">
+                            <div class="accordion-body">
+                                <p>Deploying Ansible management node based on a separate package without using Docker.</p>
+                                <br>
+                                <pre><code class="language-bash">
+    # Install Ansible
+    apt-get install -y ansible sshpass
+    
+    chown -R root:user /etc/ansible 
+    chmod -R /etc/ansible 
+    
+    # From under the regular user, we go to the /etc/ansible directory
+    cd /etc/ansible
+    
+    # Create an inventory file:
+    vim inventory 
+    
+    all:
+        inventory:
+            Networking:
+                hosts:
+                    ANY-ROUTE-NAME:
+            
+            Servers:
+                hosts:
+                    ANY-ROUTE-NAME:
+            
+            Clients:
+                hosts:
+                    ANY-ROUTE-NAME:
+    
+    :wq! # exit from VIM with save
+    
+    # Create a configuration file:
+    vim /etc/ansible/ansible.cfg
+    
+    [defaults]
+    inventory = /etc/ansible/hosts
+    host_key_checking = False
+    
+    :wq! # exit from VIM with save
+    
+    # Making additional configuration files:
+    
+    mkdir group_vars
+    cat &lt;&lt;EOF &gt; group_vars/all.yml
+        --
+        ansible_ssh_user: sshuser 
+        ansible_ssh_pass: P@ssw0rd
+        ansible_python_interpreter: /usr/bin/python3
+    EOF
+    cat &lt;&lt;EOF &gt; group_vars/Networking.yml 
+        --
+        ansible_connection: network_cli 
+        ansible_network_os: ios
+    EOF
+    
+    # Пробуем:
+    ansible -m ping all
+                            </code></pre>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -532,7 +1111,7 @@ write # configuration entry
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingSevenCPT">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSevenCPT" aria-expanded="false" aria-controls="collapseSevenCPT">
-Chapter 2.7: OSPF configuration 
+                            Chapter 2.7: OSPF configuration 
                         </button>
                     </h2>
                     <div id="collapseSevenCPT" class="accordion-collapse collapse" aria-labelledby="headingSevenCPT" data-bs-parent="#AccordionCPT">
@@ -592,6 +1171,36 @@ write # configuration entry
                         <div class="accordion-body">
                             <p>The basic configuration of FirewallG has the advantage that the whole basis of a firewall is a graphical interface and there will be nothing complicated about it.</p>
                         </div>
+                        <div class="card-body">
+                            <pre><code class="language-bash">
+In the upper-left corner, select the "Name" line and change the hostname.    
+
+# We assign IP addresses to local interfaces.
+
+- First interface: 
+    This interface can be edit. 
+    We can assign a clear name to the interface and add it to the necessary security zone to work with the group more quickly.
+
+- Second interface:
+    This interface can be add.
+
+# OSPF:
+# Necessary: remove all checkboxes.
+# Main:
+    - Enable OSPF.
+    - Add: 1. Interface, 2. NameZone (Area), 3: Cost
+
+# Assign internet:
+- Users: Accounts
+    And left menu, click on account-plus icon.
+    Name user: network ; login: network 
+
+- Users: Authorization
+Authorization with subnet: 
+    - User: network 
+    - Subnet: [IP/Mask]
+                            </code></pre>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -607,7 +1216,62 @@ write # configuration entry
         </h2>
         <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#docsAccordion">
             <div class="accordion-body">
-                <strong>This is a section with examples.</strong> Here you can provide examples of using your product or API.
+                <strong>Cyber Backup is a special software that allows you to efficiently manage backups.</strong> 
+            </div>
+            <div class="card-body">
+                <pre><code class="language-bash">
+hostnamectl -f # shows the hostname and version kernel 
+apt-get install kernel-source-[x.x] # installing the kernel source package, where [x.x] - version kernel
+apt-get install kernel-headers-modules-std-def gcc make -y # installing the necessary packages
+
+# Download CyberBackup. Assign access rights.
+chmod +x CyberBackup_17_64-bit.x86_64 
+
+# Release this package with superuser privileges.
+./CyberBackup_17_64-bit.x86-64
+
+# In the CyberBackup menu - Choose components:
+* - Management Server 
+
+# In the CyberBackup menu - Choose DBMS:
+* - Use SQLite
+
+# In the CyberBackup menu - Write personal port for Cyberprotect Web Server: 
+9877
+
+# In the CyberBackup menu - Write the TCP-port for release ping-pong products:
+7780
+
+# Continue in Alterator. 
+- Create user "wsradmin" with password "P@ssw0rd". This user has full access to the superuser privileges. He interpreter is /bin/bash.
+
+# In the CyberBackup menu -> Settings -> Users:
+- Create Department, where his name - WSR. 
+In Department "WSR" add user - wsradmin with password "P@ssw0rd" and give full access to the superuser privileges.
+Give his user to web-interface: echo "wsradmin" >> /etc/security/acronisagent.conf 
+systemctl restart acronis_ams acronis_asm
+
+# For the machine that the backup is most likely to be performed from.
+Again, install CyberBackup for first steps.
+
+# In the CyberBackup menu - Choose components:
+- Agent for Linux 
+
+# In the CyberBackup menu - CyberBackup:
+- Server management: [IP-Server] # we specify the IP of the machine on which we configured the whole thing.
+
+* - Register with next user: 
+wsradmin
+
+Organization: wsr 
+
+# Now, we have a backup server. 
+# We need to create an additional partition that we will use as a backup partition. To do this, use GParted.
+
+# In CyberBackup:
+In devices, choose "Machines with agents" -> Choose agent, and choose "Security":
+Choose place for save you backup.
+                </code></pre>
             </div>
         </div>
     </div>

@@ -147,7 +147,7 @@ ip route add 0.0.0.0/0 via [IP адрес Gateway] # назначаем марш
 apt-get install openvswitch # установка специального пакета
 
 mkdir /etc/net/ifaces/[NAME-INTERFACE`S] # На каждый интерфейс создаем папку                        
-cat <<EOF > /etc/net/ifaces/[NAME-INTERFACE]/options 
+cat &lt;&lt;EOF &gt; /etc/net/ifaces/[NAME-INTERFACE]/options 
     TYPE=eth
     BOOTPROTO=static
 EOF 
@@ -240,7 +240,7 @@ vim /etc/bind/options.conf
 
 systemctl enable --now bind # включаем и добавляем bind в автозагрузку
 
-cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf 
+cat &lt;&lt;EOF &gt; /etc/net/ifaces/[NAME-INT]/resolv.conf 
     search [DOMAIN]
     nameserver [IP DNS Server from local machine]
 EOF
@@ -269,7 +269,7 @@ vim /etc/bind/options.conf
 
 control bind-slave enabled # подключаем режим SLAVE и выставляем ему опции control 
 
-cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf
+cat &lt;&lt;EOF &gt; /etc/net/ifaces/[NAME-INT]/resolv.conf
     search [DOMAIN] 
     nameserver [First DNS Server from local machine]
     nameserver [Second DNS Server from local machine]
@@ -881,12 +881,12 @@ host_key_checking = False
 # Настраиваем доступ ко всем устройствам:
 
 mkdir group_vars
-cat <<EOF > group_vars/all.yml
+cat &lt;&lt;EOF &gt; group_vars/all.yml
     ansible_ssh_user: sshuser 
     ansible_ssh_pass: P@ssw0rd
     ansible_python_interpreter: /usr/bin/python3
 EOF
-cat <<EOF > group_vars/Networking.yml 
+cat &lt;&lt;EOF &gt; group_vars/Networking.yml 
     ansible_connection: network_cli 
     ansible_network_os: ios
 EOF
@@ -1168,6 +1168,50 @@ write # запись конфигурации
                     <div id="collapseOneFirewallG" class="accordion-collapse collapse" aria-labelledby="headingOneFirewallG" data-bs-parent="#AccordionFirewallG">
                         <div class="accordion-body">
                             <p>Базовая настройка FirewallG располагает к себе тем, что вся основа брандмауэра - это графический интерфейс и ничего сложного в этом не будет.</p>
+                            <br>
+                            <p>Для назначения названия машины на FirewallG необходимо нажать в правом верхнем углу на "Карандаш" и изменить название на необходимое.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwoFirewallG">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoFirewallG" aria-expanded="false" aria-controls="collapseTwoFirewallG">
+                            Раздел 3.2: Адресация устройств
+                        </button>
+                    </h2>
+                    <div id="collapseTwoFirewallG" class="accordion-collapse collapse" aria-labelledby="headingTwoFirewallG" data-bs-parent="#AccordionFirewallG">
+                        <div class="accordion-body">
+                            <p>FirewallG может выступать перенаправляющим пунктом пакетов, и в связи с этим, нам необходимо добавить все направляющие интерфейсы в сеть, предоставляя им доступ к сети.</p>
+                        </div>
+                        <div class="card-body">
+                            <pre><code class="language-bash">
+В левом верхнем углу выберите строку "Имя" и измените имя хоста.                                
+
+# Назначаем IP-адреса на локальные интерфейсы.
+
+- Первый интерфейс: 
+    Этот интерфейс можно редактировать. 
+    Мы можем присвоить интерфейсу понятное название и добавить его в необходимую зону безопасности для более быстрой работы с группой.
+
+- Второй интерфейс:
+    Этот интерфейс можно добавить.
+
+# OSPF:
+# Необходимо: снять все флажки.
+# Главное:
+    - Включить OSPF.
+    - Добавить: 1. Интерфейс, 2. Название зоны (Area), 3. Стоимость
+
+# Назначить интернет:
+- Пользователи: Учетные записи
+    И в левом меню нажмите на значок аккаунта с плюсиком.
+    Имя пользователя: network ; логин: network
+
+- Пользователи: Авторизация
+Авторизация с использованием подсети: 
+    - Пользователь: сеть 
+    - Подсеть: [IP/маска]
+                            </code></pre>
                         </div>
                     </div>
                 </div>
@@ -1184,7 +1228,63 @@ write # запись конфигурации
         </h2>
         <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#docsAccordion">
             <div class="accordion-body">
-                <strong>Это раздел с примерами.</strong> Здесь можно привести примеры использования вашего продукта или API.
+                <strong>Cyber Backup - это специальное программное обеспечение, позволяющее рационально управлять резервным копированием.</strong> 
+            </div>
+            <div class="card-body">
+                <pre><code class="language-bash">
+hostnamectl -f # показывает имя хоста и версию ядра. 
+apt-get install kernel-source-[x.x] # устанавливаем пакет исходного кода ядра, где [x.x] - версия ядра
+apt-get install kernel-headers-modules-std-def gcc make -y # установка дополнительных пакетов.
+
+# Скачиваем CyberBackup. Назначаем права доступа.
+chmod +x CyberBackup_17_64-bit.x86_64 
+
+# Устанавливаем пакет из-под суперпользователя.
+./CyberBackup_17_64-bit.x86-64
+
+# В меню установки CyberBackup - Выбор компонентов:
+* - Management Server 
+
+# В меню установки CyberBackup - Выбор СУБД:
+* - Use SQLite
+
+# В меню установки CyberBackup - Указываем порт для Cyberprotect Web Server:
+9877
+
+# В меню установки CyberBackup - Указываем TCP-порт для реализации обмена данных:
+7780
+
+# В Альтераторе:
+- Создаем пользователя "wsradmin" с паролем "P@ssw0rd". Этот пользователь должен иметь доступ к административным командам и его интерпретатором должен являться /bin/bash
+
+# Внутри самого CyberBackup:
+Переходим в Настройки -> Учетные записи
+- Создаем отдел, где его название - wsr
+В отделе "wsr" создаем пользователя - wsradmin с паролем "P@ssword" и даем полный доступ к административным командам.
+Даем ему доступ к нашему веб-интерфейсу: echo "wsradmin" >> /etc/security/acronisagent.conf 
+systemctl restart acronis_ams acronis_asm
+
+# Для машины, с которой будем выполнять резервное копирование.
+Снова устанавливаем CyberBackup по первым этапам.
+
+# В меню установки CyberBackup - Выбор компонентов:
+- Agent for Linux 
+
+# В меню установки CyberBackup - CyberBackup:
+- Сервер управления: [IP-Server] # мы выбираем специальный IP, который указан на первоначальном сервере, где есть CyberBackup.
+
+* - Зарегистрироваться под пользователем.: 
+wsradmin
+
+Organization: wsr 
+
+# Теперь, мы имеем агента CyberBackup.
+# Нам необходимо создать еще один раздел, который мы будем использовать для резервного копирования. Для этого, используем GParted.
+
+# В CyberBackup:
+В Устройствах, выбираем "Машины с агентом", выбираем необходимый агент и нажимаем "Защитить"
+Выбираем данные, место сохранения и помечаем локальную папку. Выполняем созданный план защиты.
+                </code></pre>
             </div>
         </div>
     </div>
