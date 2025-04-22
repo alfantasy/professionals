@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-white mb-4">System Documentation</h1>
+        <p class="text-gray-300">Complete guides for system administration and network configuration</p>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+        <a href="/en/docs/alt-linux" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fab fa-linux"></i> Alt Linux
+        </a>
+        <a href="/en/docs/cisco" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-network-wired"></i> Cisco PT
+        </a>
+        <a href="/en/docs/firewall" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-fire"></i> Firewall
+        </a>
+        <a href="/en/docs/cyberbackup" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-database"></i> Cyber Backup
+        </a>
+        <a href="/en/docs/terraform" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-cloud"></i> Terraform
+        </a>
+    </div>
+
+    <!-- Quick links -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-4">Popular Guides</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="/en/docs/alt-linux#networking" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-ethernet mr-2"></i> Alt Linux Network Configuration
+            </a>
+            <a href="/en/docs/cisco#cpt-ospf" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-route mr-2"></i> Cisco OSPF Setup
+            </a>
+            <a href="/en/docs/terraform#devstack" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-server mr-2"></i> Terraform Infrastructure
+            </a>
+            <a href="/en/docs/cyberbackup#setup" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-hdd mr-2"></i> Cyber Backup Initialization
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-info-circle text-blue-400 mr-2"></i>Документация
+        </h1>        
+        <strong class="text-gray-300">Раздел включает в себя нераспространенные документационные файлы.</strong>
+    </div>
+
+    <div class="space-y-12">
+        <section id="not-complete-documentation" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-while mb4">Документация находится в разработке и непосредственной переработке.</h2>
+            <p class="text-gray-300 mb-2">Весь находящихся здесь текст является непереработанной информацией. Ссылок здесь нет.</p>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Тест-документации</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">
+1. Структура проекта:
+/home/altlinux/bin/
+├── terraform/
+│   ├── main.tf          # Основная конфигурация
+│   ├── variables.tf     # Переменные
+│   ├── outputs.tf       # Выходные данные
+│   ├── haproxy.tf       # Конфигурация HAProxy
+│   ├── webservers.tf    # Конфигурация веб-серверов
+│   ├── databases.tf     # Конфигурация БД
+│   └── templates/       # Шаблоны конфигураций
+└── cloudinit.conf       # Файл конфигурации (для учетных данных)
+
+2. cloudinit.conf
+# Cyber Infrastructure API Authentication
+export OS_AUTH_URL="https://[IP or URL]:5000/v3"
+export OS_IDENTITY_API_VERSION="3"
+export OS_USER_DOMAIN_NAME="Default"
+export OS_PROJECT_DOMAIN_NAME="Default"
+export OS_PROJECT_NAME="ваш_проект"          # Замените на имя проекта в Cyber Infrastructure
+export OS_USERNAME="ваш_логин"               # Логин в панели управления
+export OS_PASSWORD="ваш_пароль"              # Пароль (можно заменить на токен)
+export OS_REGION_NAME="RegionOne"            # Регион (уточните в панели)
+
+# Параметры для Terraform
+export TF_VAR_OS_AUTH_URL=[API_URL]
+export TF_VAR_OS_PROJECT_NAME=[PROJECT]
+export TF_VAR_OS_USERNAME=[USERNAME]
+export TF_VAR_OS_PASSWORD=[PASSWORD]
+
+3. Основной файл main.tf
+terraform {
+    required_providers {
+      openstack = {
+        source  = "terraform-provider-openstack/openstack"
+        version = "2.1.0"
+      }
+    }
+  }
+  
+  provider "openstack" {
+    auth_url    = var.OS_AUTH_URL
+    tenant_name = var.OS_PROJECT_NAME
+    user_name   = var.OS_USERNAME
+    password    = var.OS_PASSWORD
+    insecure    = true
+  }
+  
+  # Создание сетей
+  resource "openstack_networking_network_v2" "internal_net" {
+    name           = "Internal-Net"
+    admin_state_up = "true"
+  }
+  
+  resource "openstack_networking_subnet_v2" "internal_subnet" {
+    name       = "Internal-Subnet"
+    network_id = openstack_networking_network_v2.internal_net.id
+    cidr       = "192.168.10.0/26"
+  }
+  
+  # Создание роутера
+  resource "openstack_networking_router_v2" "cloud_rtr" {
+    name                = "Cloud-RTR"
+    external_network_id = data.openstack_networking_network_v2.external_net.id
+  }
+  
+  # Подключение подсетей к роутеру
+  resource "openstack_networking_router_interface_v2" "internal_interface" {
+    router_id = openstack_networking_router_v2.cloud_rtr.id
+    subnet_id = openstack_networking_subnet_v2.internal_subnet.id
+  }
+
+4. Файл variables.tf
+variable "OS_AUTH_URL" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_PROJECT_NAME" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_USERNAME" {
+    type = string
+    sensitive = true
+}
+
+variable "OS_PASSWORD" {
+    type = string
+    sensitive = true
+}
+
+5. instance.tf
+# Общий шаблон для создания инстансов
+resource "openstack_compute_instance_v2" "instances" {
+  for_each = {
+    ha01 = { flavor = "m1.tiny", networks = ["Internal-Net", "Management-Net"] }
+    ha02 = { flavor = "m1.tiny", networks = ["Internal-Net", "Management-Net"] }
+    web01 = { flavor = "m1.small", networks = ["Internal-Net", "Management-Net"] }
+    web02 = { flavor = "m1.small", networks = ["Internal-Net", "Management-Net"] }
+    db01 = { flavor = "m1.small", networks = ["Internal-Net", "Management-Net"] }
+    db02 = { flavor = "m1.small", networks = ["Internal-Net", "Management-Net"] }
+  }
+
+  name            = "Cloud-${upper(each.key)}"
+  image_name      = "alt-p10-cloud-x86_64"
+  flavor_name     = each.value.flavor
+  key_pair        = var.key_pair
+  security_groups = ["default"]
+
+  dynamic "network" {
+    for_each = each.value.networks
+    content {
+      name = network.value
+    }
+  }
+
+  user_data = file("${path.module}/templates/cloud-init-${each.key}.yaml")
+}
+
+6. Настройка балансировщика нагрузки haproxy.tf
+resource "openstack_lb_loadbalancer_v2" "cloud_lb" {
+    name          = "Cloud-LB"
+    vip_subnet_id = openstack_networking_subnet_v2.internal_subnet.id
+  }
+  
+  resource "openstack_lb_listener_v2" "http" {
+    name            = "http-listener"
+    protocol        = "HTTP"
+    protocol_port   = 80
+    loadbalancer_id = openstack_lb_loadbalancer_v2.cloud_lb.id
+  }
+  
+  resource "openstack_lb_pool_v2" "http_pool" {
+    name        = "http-pool"
+    protocol    = "HTTP"
+    lb_method   = "ROUND_ROBIN"
+    listener_id = openstack_lb_listener_v2.http.id
+  }
+  
+  resource "openstack_lb_member_v2" "ha_members" {
+    for_each = {
+      ha01 = openstack_compute_instance_v2.instances["ha01"].access_ip_v4
+      ha02 = openstack_compute_instance_v2.instances["ha02"].access_ip_v4
+    }
+  
+    name          = "member-${each.key}"
+    address       = each.value
+    protocol_port = 80
+    pool_id       = openstack_lb_pool_v2.http_pool.id
+    subnet_id     = openstack_networking_subnet_v2.internal_subnet.id
+  }
+
+7. deploy-cloudinfra.tf
+#!/bin/bash
+
+# Директория с Terraform конфигурацией
+TF_DIR="/home/altlinux/bin/terraform"
+
+# Инициализация Terraform
+terraform -chdir=$TF_DIR init
+
+# Применение конфигурации
+terraform -chdir=$TF_DIR apply -auto-approve \
+  -var "auth_url=$(grep OS_AUTH_URL /home/altlinux/bin/cloudinit.conf | cut -d'=' -f2)" \
+  -var "tenant_name=$(grep OS_PROJECT_NAME /home/altlinux/bin/cloudinit.conf | cut -d'=' -f2)" \
+  -var "user_name=$(grep OS_USERNAME /home/altlinux/bin/cloudinit.conf | cut -d'=' -f2)" \
+  -var "password=$(grep OS_PASSWORD /home/altlinux/bin/cloudinit.conf | cut -d'=' -f2)" \
+  -var "key_pair=my-key"
+
+8. Пример cloud-init-ha01.yml
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - haproxy
+  - keepalived
+
+write_files:
+  - path: /etc/haproxy/haproxy.cfg
+    content: |
+      global
+          log /dev/log local0
+          log /dev/log local1 notice
+          chroot /var/lib/haproxy
+          stats socket /run/haproxy/admin.sock mode 660 level admin
+          stats timeout 30s
+          user haproxy
+          group haproxy
+          daemon
+
+      defaults
+          log global
+          mode http
+          option httplog
+          option dontlognull
+          timeout connect 5000
+          timeout client 50000
+          timeout server 50000
+
+      frontend http_front
+          bind *:80
+          stats uri /haproxy?stats
+          default_backend http_back
+
+      backend http_back
+          balance roundrobin
+          server web01 192.168.10.3:80 check
+          server web02 192.168.10.4:80 check
+
+  - path: /etc/keepalived/keepalived.conf
+    content: |
+      vrrp_script chk_haproxy {
+          script "pidof haproxy"
+          interval 2
+      }
+
+      vrrp_instance VI_1 {
+          interface eth0
+          state MASTER
+          virtual_router_id 51
+          priority 100
+          virtual_ipaddress {
+              192.168.10.100/24
+          }
+          track_script {
+              chk_haproxy
+          }
+      }
+
+runcmd:
+  - systemctl enable --now haproxy
+  - systemctl enable --now keepalived
+  - firewall-cmd --permanent --add-service=http
+  - firewall-cmd --reload
+                    </code>
+                </pre>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

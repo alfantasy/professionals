@@ -1,0 +1,973 @@
+{% extends "base.html" %}
+
+{% block title %}Alt Linux Docs - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fab fa-linux text-blue-400 mr-2"></i>Alt Linux Documentation
+        </h1>
+        <strong class="text-gray-300">This section documentation contains information about Alt Linux.</strong>
+        <p class="text-gray-300">There are so-called "subsections" in the section, which will be divided into elements of the settings of various packages, by the system itself with examples in the form of "pieces" of code and screenshots.</p>
+        <p class="text-gray-300">Alt Linux is a domestic operating system based on the Linux kernel and the Mandriva distribution.</p>
+        <p class="text-gray-300">The use of Alt at the moment is system administration to replace Windows Server.</p>
+        <div class="divider"></div>
+    </div>
+
+    <!-- Subsection navigation -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Basic Setup</a>
+        <a href="#networking" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>Networking</a>
+        <a href="#nataddressing" class="btn btn-sm"><i class="fa-solid fa-hexagon-nodes"></i>NAT Addressing</a>
+        <a href="#openvswitch" class="btn btn-sm"><i class="fa-solid fa-circle-nodes"></i>Open vSwitch</a>
+        <a href="#dns-config" class="btn btn-sm"><i class="fa-solid fa-circle-nodes"></i>DNS Server</a>
+        <a href="#ntp-config" class="btn btn-sm"><i class="fa-solid fa-timeline"></i>NTP Protocol</a>
+        <a href="#samba" class="btn btn-sm"><i class="fa-solid fa-user-tag"></i>Samba AD</a>
+        <a href="#backup-config" class="btn btn-sm"><i class="fa-solid fa-person-chalkboard"></i>Backup</a>
+        <a href="#domain-management" class="btn btn-sm"><i class="fa-solid fa-users-gear"></i>Domain Management</a>
+        <a href="#docker" class="btn btn-sm"><i class="fa-brands fa-docker"></i>Docker</a>
+        <a href="#zabbix" class="btn btn-sm"><i class="fa-solid fa-globe"></i><i class="fa-solid fa-users"></i>Zabbix</a>
+        <a href="#nginx_web_server" class="btn btn-sm"><i class="fab fa-webflow"></i>Nginx Web Server</a>
+        <a href="#ansible" class="btn btn-sm"><i class="fa-solid fa-robot"></i>Ansible</a>
+    </div>
+
+    <!-- Content sections -->
+    <div class="space-y-12">
+        <section id="basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fas fa-cog mr-2"></i> Basic Configuration</h2>
+            <!-- Content here -->
+            <p class="text-gray-300">The basic setup includes naming the system, creating users and assigning them as local administrators of the system other than the superuser. Users who will be considered local will be added to the sudoers file.</p>
+            <p class="text-gray-300">And so, let`s start with the simplest, the name of system:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 p-2 bg-gray-900 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">hostnamectl set-hostname [full_name_with_domain]
+# The hostname assignment is most often performed together with the domain.</code></pre>
+            </div>            
+            <p class="text-gray-300 ">Assigning a system name is necessary to identify it, for example, when a computer is in a domain, the main controller will read the names of the systems and identify them in a similar way.</p>
+            <p class="text-gray-300 ">Creating a user:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">useradd [NAME] -m -U -s /bin/bash </code></pre>
+            </div>
+            <p class class="text-gray-300 ">The -m key is required to create the user's home directory, the -U key is required to automatically create a group for the created user</p>
+            <p class class="text-gray-300 ">the -s key is required to specify the shell.</p>
+            <p class="text-gray-300 ">Adding the user to the "wheel" group:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">usermod -aG wheel [NAME] </code></pre>
+            </div>
+            <p class="text-gray-300 ">This command allows us to transfer the user to a special group of "administrators" (referred to in the system as the "wheel")</p>
+            <p class="text-gray-300 ">Granting admin privileges:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">echo "[NAME] ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers</code></pre>
+            </div>
+            <p class="text-gray-300 ">This command allows us to transfer the user to a special group of "administrators" (referred to in the system as the "wheel")</p>
+        </section>
+
+        <section id="networking" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Network Configuration</h2>
+            <!-- Content here -->
+            <p class="text-gray-300">Addressing in Alt is based on manually configuring devices and specifying IP addresses on the system.</p>
+            <p class="text-gray-300">For example, configure the interface with the IP address on machine:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">
+mkdir /etc/net/ifaces/[NAME-INTERFACE] # Create a folder for each interface
+cat <<EOF > /etc/net/ifaces/[NAME-INTERFACE]/options # Making a configuration file for the first file
+    > BOOTPROTO=static 
+    > TYPE=eth
+    > CONFIG_IPV4=yes
+    > DISABLED=no
+    > NM_CONTROLLED=no
+EOF                    
+
+or
+
+vim /etc/net/ifaces/[NAME-INTERFACE]/options
+> BOOTPROTO=static
+> TYPE=eth
+> CONFIG_IPV4=yes
+> DISABLED=no
+> NM_CONTROLLED=no
+
+# ESC and write :wq! - exit VIM with save.
+                </code></pre>
+            </div>
+            <p class="text-gray-300"><strong>BOOTPROTO</strong> is responsible for configuring the adapter itself, in this case, the static address.</p>
+            <p class="text-gray-300">If you need a dynamically assigned DHCP, then write dhcpv4 / dhcp</p>
+            <p class="text-gray-300"><strong>TYPE</strong> - specifies the adapter type.</p>
+            <p class="text-gray-300"><strong>DISABLED</strong> - whether the adapter will be turned off or not</p>
+            <p class="text-gray-300"><strong>NM_CONTROLLED</strong> - whether the adapter will be controlled by the NetworkManager</p>
+            <p class="text-gray-300"><strong>CONFIG_IPV4</strong> - enables IPv4 configuration </p>
+            <p class="text-gray-300 mb-2">Assign an IP address:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">echo "[IP]/[Mask]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4address</code></pre>
+            </div>
+            <p class="text-gray-300 mb-2">Assign a gateway:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">echo "default via [IP-Gateway]" > /etc/net/ifaces/[INTERFACE-NAME]/ipv4route</code></pre>
+            </div>
+            <p class="text-gray-300 mb-2">Restart the service responsible for the network:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl restart network</code></pre>
+            </div>
+            <p class="text-gray-300 mb-2">Check the status of the service:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl status network</code></pre>
+            </div>
+            <p class="text-gray-300 mb-2">Check the assigned:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ip -c --br a # we are looking for the assigned IP address
+ip -c r # we are looking for the assigned gateway</code></pre>
+        </section>
+
+        <section id="nataddressing" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-hexagon-nodes"></i> Temporary configuration for NAT addressing</h2>
+            <p class="text-gray-300">Temporary setup is necessary for an emergency internet connection.</p>
+            <p class="text-gray-300">However, all the settings are fictitious and they work until the machine restarts. For security reasons, it is recommended to use this method rather than manual assignment using etcnet.</p>
+            <p class="text-gray-300">See, this is how it works:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ip link add link [NAME-INTERFACE] name [NAME-INTERFACE].[ID VLAN] type vlan id [ID VLAN] # make a link from the adapter to the additional
+ip link set dev [NAME-INTERFACE] up # raise the main adapter
+ip link set dev [NAME-INTERFACE].[VLAN ID] up # raise the reference adapter
+ip addr add [IP address]/[Mask] dev [NAME-INTERFACE].[VLAN ID] # assign the IP address to the reference adapter
+ip route add 0.0.0.0/0 via [Gateway IP address] # assigning a route</code></pre>
+            </div>
+        </section>
+
+        <section id="openvswitch" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-circle-nodes"></i> Open vSwitch - basic switching in Linux</h2>
+            <p class="text-gray-300">Open vSwitch is most important package for networking in Linux, this is a virtual switch.</p>
+            <p class="text-gray-300">It is necessary to install the package:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">apt-get install openvswitch</code></pre>
+            </div>
+            <p class="text-gray-300">You need assign all interfaces to the virtual switch.</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">mkdir /etc/net/ifaces/[INTERFACE-NAME]
+# Making a configuration file
+cat <<EOF > /etc/net/ifaces/[INTERFACE-NAME]/options
+    TYPE=eth
+    BOOTPROTO=static
+EOF
+
+cp /etc/net/ifaces/[First INTERFACE-NAME]/options /etc/net/ifaces/[Next INTERFACE-NAME]/options # Moving the configuration file to all other
+systemctl restart network # restarting the main network service</code></pre>
+            </div>
+            <p class="text-gray-300">For continue, you need create a management interface:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">mkdir /etc/net/ifaces/MGMT
+# Making a configuration file
+vim /etc/net/ifaces/MGMT/options
+> TYPE=ovsport
+> BOOTPROTO=static
+> CONFIG_IPV4=yes
+> BRIDGE=NAME-BRIDGE OR SYSTEM 
+> VID=VLAN ID</code></pre>
+            </div>      
+            <p class="text-gray-300">Where <strong>TYPE</strong> is, we specify the adapter type, in our case it is <strong><i>ovsport</i></strong>, because it will use the Open vSwitch.</p>
+            <p class="text-gray-300">Dont forget delete special option in /etc/net/ifaces/default/options:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">vim /etc/net/ifaces/default/options
+> OVS_REMOVE=no</code></pre>
+            </div>
+            <p class="text-gray-300">We cut off the Open vSwitch service management, because we configure it ourselves.</p>
+            <p class="text-gray-300">Restart the management service:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl restart network</code></pre>
+            </div>
+            <p class="text-gray-300">Now you can see the formatted output of IP addresses on the system:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ip -c --br a</code></pre>
+            </div>
+            <p class="text-gray-300">Now, we can create a special settings for Open vSwitch:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ovs-vsctl add-br [NAME-BRIDGE] # create a bridge
+ovs-vsctl add-port [NAME-BRIDGE] [INTERFACE-NAME] # add an interface to the bridge
+or 
+ovs-vsctl add-port [NAME-BRIDGE] [INTERFACE-NAME] [TRUNK/TAG]=[NUMBER or NUMBERS with commas] # add an interface to the bridge with trunk or tag
+# For example:
+ovs-vsctl add-port SW ens19 trunk=3213,3212,3211</code></pre>
+            </div>
+            <p class="text-gray-300">Here you create a port on the bridge with an indication of the interface being conducted and the type of port conduction, trunk - trunk.</p>
+            <p class="text-gray-300">When specifying a tag, we can specify a single VLAN ID</p>
+            <p class="text-gray-300">You can check settings Open vSwitch with command <strong>ovs-vsctl show</strong></p>
+            <p class="text-gray-300">Dont forget enable mod in kernel 8021q:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">modprobe 8021q
+echo "8021q" | tee -a /etc/modules # fully enable it on an ongoing basis
+lsmod | grep "8021q" # checking the module operation</code></pre>
+            </div>
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> If the 8021q kernel module settings are not installed, the ping-pong packages will not pass through.</span>
+                </div>
+            </div>               
+            <p class="text-gray-300">You can configure STP protocol in Open vSwitch with basicly settings and command:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ovs-vsctl set bridge [NAME-BRIDGE] stp_enable=true # setting the STP protocol to TRUE
+ovs-vsctl set bridge [NAME-BRIDGE] other_config:stp-priority=[16384 OR ANY NUMBER] # specifying a number less than if it must be rooted</code></pre>
+            </div>      
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> STP settings must be performed on each virtual switch without exceptions, otherwise, in case of any errors, a switching loop will appear, from which you can exit using the "Troubleshooting" method, through ARPING and other methods.</span>
+                </div>
+            </div>                    
+        </section>
+
+        <section id="dns-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-circle-nodes"></i> DNS Server Configuration</h2>
+            <p class="text-gray-300 mb-2">Setting up a DNS server using BIND with fallback and security configuration.</p>
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                  <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                  <span><strong>Important!</strong> Incorrect configuration may break everything. Be careful with config files!</span>
+                </div>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Initial setup and configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Temporary DNS to install packages
+echo "nameserver 77.88.8.8" > /etc/resolv.conf
+            
+apt-get update && apt-get install -y bind bind-utils
+            
+vim /etc/bind/options.conf
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { any; };
+> forwarders { 77.88.8.8; };
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; };
+> allow-transfer { [Secondary IP DNS Server]; };
+
+:wq!
+
+systemctl enable --now bind
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf
+    search [DOMAIN]
+    nameserver [IP of local DNS server]
+EOF
+
+systemctl restart network bind
+
+ping -c3 ya.ru</code></pre>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+            <h3 class="font-semibold text-lg mb-2"><i class="fas fa-shield-alt"></i> Backup DNS server (secondary)</h3>
+            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">vim /etc/bind/options.conf
+> listen-on { 127.0.0.1; [IP Machine]; };
+> listen-on-v6 { none; };
+> forwarders { 77.88.8.8; };
+> allow-query { [First IP-Subnet]; [Second IP-Subnet]; };
+> allow-transfer { none; };
+
+control bind-slave enabled
+
+cat <<EOF > /etc/net/ifaces/[NAME-INT]/resolv.conf
+search [DOMAIN]
+nameserver [Primary DNS]
+nameserver [Secondary DNS]
+EOF
+
+systemctl restart network && systemctl enable --now bind</code></pre>
+            </div>
+            
+            <div class="alert alert-error shadow-lg">
+            <div>
+                <i class="fas fa-bug text-red-800"></i>
+                <span><strong>Bind error fix:</strong> If BIND throws permission errors, run:</span>
+            </div>
+            </div>
+            <pre class="mt-2"><code class="language-bash">control bind-chroot disabled</code></pre>            
+        </section>
+
+        <section id="ntp-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-clock"></i> NTP Protocol Configuration
+            </h2>
+            <p class="text-gray-300 mb-2">Setting up an NTP server using Chrony to sync time with an external server.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> Ensure correct NTP server settings to maintain accurate time synchronization.</span>
+                </div>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Initial Setup and Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install chrony # installing a special package
+
+vim /etc/chrony.conf  
+> server [IP NTP Server] iburst prefer # specify as preferred server
+> local stratum [N] # specify the stratum value if necessary
+> allow [IP-Subnet] # specify the allowed subnets
+
+:wq! - exit VIM with save
+
+systemctl enable --now chronyd # enabling and adding chronyd to startup
+
+chronyc sources # checking the functionality
+
+timedatectl # checking the time zone
+
+# On other machines that need to be connected to NTP
+apt-get install chrony 
+vim /etc/chrony.conf 
+> server [IP NTP Server] iburst prefer 
+
+:wq! 
+
+systemctl enable --now chronyd # enabling and adding chronyd to startup</code></pre>
+            </div>
+        
+            <div class="alert alert-error shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-bug text-red-800"></i>
+                    <span><strong>Fix for NTP Errors:</strong> If Chrony doesn't sync, check your configuration or try restarting the service.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sync-alt"></i> Syncing with External NTP Server</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># To sync with the NTP server, use the following commands:
+
+chronyc tracking # show current synchronization status
+chronyc sources -v # show NTP sources
+
+systemctl restart chronyd # restart Chrony if there are sync issues
+
+# Check synchronization status again
+chronyc tracking</code></pre>
+            </div>
+        </section> 
+
+        <section id="samba" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-network-wired"></i> SAMBA AD Domain Infrastructure
+            </h2>
+            <p class="text-gray-300 mb-2">Setting up the Samba domain infrastructure with DNS integration and Kerberos configuration.</p>
+        
+            <div class="flex flex-wrap gap-2 mb-2">
+                <a href="#samba-install" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Install</a>
+                <a href="#samba-config" class="btn btn-sm"><i class="fas fa-cogs mr-2"></i>Configuration</a>
+                <a href="#samba-join" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Join</a>
+                <a href="#samba-backup" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Backup DC</a>
+                <a href="#samba-shared" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Shared Folder</a>
+            </div>
+
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> Ensure BIND is configured properly before setting up Samba for the domain to function correctly.</span>
+                </div>
+            </div>
+            
+            <div id="samba-install" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Samba AD Installation</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install -y task-samba-dc # installing the SAMBA AD package
+control bind-chroot disabled # disable CHROOT mode for BIND
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind 
+# Disabling krb5kdc cache type from BIND, allowing Samba to access Kerberos.
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf 
+# Add Samba file paths to BIND config
+
+vim /etc/bind/options.conf 
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes;
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # exit VIM with save
+
+systemctl stop bind # stop BIND
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Remove old config files, directories, and create SYSVOL folder
+
+samba-tool domain provision # initialize the domain</code></pre>
+            </div>
+
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> When choosing the module, because we used DNS in the early settings. DNS Backend: BIND9_DLZ.</span>
+                </div>
+            </div>
+
+            <p class="text-gray-300 mb-4">We can continue the configuration.</p>
+
+            <div id="samba-config" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Samba AD Configuration</h3>            
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">    systemctl enable --now samba && systemctl start bind 
+# Launching Samba AD with the addition of autorun and bind
+
+cp /var/lib/samba/private/krb5.conf /etc/krb5.conf # copy the Kerberos configuration file from the Samba private directory to the main one.
+
+# Adding records like A, PTR, and CNAME:
+    
+# Records of type A are added as follows:
+samba-tool dns add 127.0.0.1 [domain-name] [machine-name] A [IP machine] -U[Name Admininstrator] -p[Password]
+# Adding entry A. Example of filling in:
+samba-tool dns add 127.0.0.1 gosgov.ru client.gosgov.ru A 38.0.101.76 -Uadmin -padmin
+
+samba-tool dns query 127.0.0.1 [domain-name] @ A # checking for adding an entry of type A
+    
+# PTR type records are added as follows:
+samba-tool dns zonecreate 127.0.0.1 [Reverse-IP].in-addr.arpa # Adding a recording zone 
+    
+samba-tool dns zonelist 127.0.0.1 # Checking if a zone has been added
+
+samba-tool dns add 127.0.0.1 [Reverse-IP].in-addr.arpa [Last-Host-NumIP] PTR [Full-Domain-Name with Hostname] 
+# Directly adding a PTR record. Example of filling in:
+samba-tool dns add 127.0.0.1 10.10.10.in-addr.arpa 1 PTR client.gosgov.ru
+
+# CNAME type records are added as follows:
+samba-tool dns add 127.0.0.1 [Domain Name] [NAME-SITE] CNAME [Full-Domain-Name with Hostname] -U[Name Admininstrator] -p[Password]
+# Adding a CNAME record. Example of filling in:
+samba-tool dns add 127.0.0.1 gosgov.ru www CNAME server.gosgov.ru -Uadmin -padmin
+
+# Create groups and users:
+samba-tool group add [NAME] -U[Name Admininstrator] -p[Password] 
+# Create a user group. Example of filling in:
+samba-tool group add users -Uadmin -padmin
+
+# Create Users:
+samba-tool user add [NAME] [Password] -U[Name Admininstrator] -p[Password]
+# Example of filling in:
+samba-tool user add user resu -Uadmin -padmin
+
+# Disabling EXPIRATION options and assigning a user to a group:
+samba-tool user setexpiry [NAME-USER] --noexpiry 
+# Change the EXPIRATION parameter. Example of filling in:
+samba-tool user setexpiry user --noexpiry
+
+samba-tool group addmembers "[NAME-GROUP]" [NAME-USER] 
+# Adding a user to a group. Example of filling in:
+samba-tool group addmembers "users" user
+
+samba-tool ou add 'OU=[NAME]'
+# Adding a division. Example of filling in:
+samba-tool ou add 'OU=IT'</code></pre>
+            </div>
+            <div class="alert alert-error shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-bug text-red-800"></i>
+                    <span><strong>Fix for BIND or Samba Errors:</strong> If issues persist, ensure all configuration steps were followed correctly.</span>
+                </div>
+            </div>
+
+            <div id="samba-join" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Samba Domain Join</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">samba-tool domain join [DOMAIN-NAME] DC -U[AdminName] --realm=[DOMAIN-NAME] --dns-backend=BIND9_DLZ
+# Join the domain
+
+systemctl enable --now samba bind # enable and start Samba with BIND
+
+# Replication Example:
+samba-tool drs replicate [Machine DC From] [Machine DC To] dc=[Domain-2L],dc=[Domain-1L] -U[AdminName] -p[Password]
+
+# Example of filling in:
+samba-tool drs replicate dc1.gosgov.ru dc2.gosgov.ru dc=gosgov,dc=ru -Uadmin -padmin</code></pre>
+            </div>
+
+            <div id="samba-backup" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Samba AD Backup DC</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install -y task-samba-dc # installing the SAMBA AD package 
+control bind-chroot disabled # turn off the CHROOT mode (mentioned above)
+
+systemctl disable --now smb nmb krb5kdc slapd bind 
+# Turn off conflicting services completely. 
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf
+
+vim /etc/bind/options.conf
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes; 
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # exiting VIM with saving
+
+vim /etc/krb5.conf 
+> default_realm = [DOMAIN-NAME] 
+> dns_lookup_kdc = true 
+> dns_lookup_realm = false 
+
+:wq! # exiting VIM with saving
+
+kinit [Name Admininstrator]@[DOMAIN-NAME]
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Delete the old configuration files, private directories, and create the SYSVOL folder.</code></pre>
+            </div>
+
+            <div id="samba-shared" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Shared folder configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">mkdir /opt/data # create a shared folder
+chmod 777 /opt/data # give maximum rights to all users
+
+# Go to the configuration file:
+vim /etc/samba/smb.conf 
+
+# Add to the configuration file:
+[SAMBA] 
+    path = /opt/data
+    comment = "SAMBA"
+    public = yes 
+    writable = yes
+    browseable = yes 
+    guest ok = yes
+
+:wq! # exiting VIM with saving
+
+systemctl restart samba # restart samba
+
+# Checking:
+smbclient -L localhost -U[NameAdmin]</code></pre>
+            </div>
+        </section>       
+        
+        <section id="backup-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-hard-drive"></i> Backup Implementation</h2>
+            <p class="text-gray-300 mb-2">Setting up a backup system using <code>systemd</code> service and timer units for automated archiving.</p>
+            
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Important!</strong> Ensure <code>/opt/data</code> contains critical files before proceeding.</span>
+                </div>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Basic Backup Service</h3>
+                <p class="text-gray-300 mb-3">Creates a compressed archive of <code>/opt/data</code> on demand.</p>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Create backup directory
+mkdir -p /var/bac/  
+
+# Service unit configuration
+vim /etc/systemd/system/backup.service
+
+[Unit]
+Description=Backup service for /opt/data
+
+[Service]
+Type=oneshot
+ExecStart=/bin/tar -czf "/var/bac/SAMBA.tar.gz" /opt/data 
+
+[Install]
+WantedBy=multi-user.target
+
+:wq!
+
+systemctl daemon-reload
+systemctl enable --now backup</code></pre>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-clock"></i> Automated Daily Backups</h3>
+                <p class="text-gray-300 mb-3">Runs the backup daily at 20:00 with persistent logging.</p>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Timer unit configuration
+vim /etc/systemd/system/backup.timer
+
+[Unit]
+Description=Daily backup at 20:00
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true
+Unit=backup.service
+
+[Install]
+WantedBy=timers.target
+
+:wq!
+
+systemctl daemon-reload
+systemctl enable --now backup.timer</code></pre>
+            </div>
+            
+            <div class="alert alert-info shadow-lg">
+                <div>
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                    <span><strong>Pro Tip:</strong> Use <code>journalctl -u backup.service</code> to check backup logs.</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="domain-management" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Domain Management</h2>
+            <p class="text-gray-300 mb-2">Managing domain policies and shared resources using ADMC and GPUI tools.</p>
+        
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span>This guide assumes you have administrative privileges in the domain.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Initial Setup</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Update and install required packages
+apt-get update && apt-get install -y gpupdate admc gpui
+
+# Enable group policy module
+gpupdate-setup enable
+
+# Get Kerberos ticket (run as admin)
+kinit [AdminName]@[DOMAIN-NAME]</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sliders-h"></i> Group Policy Configuration</h3>
+                <p class="text-gray-300 mb-3">To manage policies through ADMC:</p>
+                <ol class="list-decimal pl-5 space-y-2 text-gray-300">
+                    <li>Launch ADMC from applications</li>
+                    <li>Navigate to "Group Policy Objects" → desired section (e.g. IT)</li>
+                    <li>Right-click → "Create a policy and link it to a division"</li>
+                    <li>Name the policy and click OK</li>
+                    <li>Right-click policy → "Edit..." to launch GPUI</li>
+                </ol>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2"><i class="fas fa-desktop"></i> Example: Desktop Background Policy</h4>
+                    <p class="text-gray-300 mb-2">Path in GPUI:</p>
+                    <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">Computer → Administrative Templates → ALT System → Mate Settings → Desktop Background</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Set status to "Enabled"</li>
+                        <li>Fill "File" section</li>
+                        <li>Check "Block" option</li>
+                    </ul>
+                </div>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2"><i class="fas fa-wifi"></i> Network Restrictions</h4>
+                    <p class="text-gray-300 mb-2">Path in GPUI:</p>
+                    <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">ALT System → Polkit Rules → NetworkManager Restrictions</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Enable "Limitation of network mode switching"</li>
+                        <li>Set "Disable options" to No</li>
+                        <li>Check "Block"</li>
+                    </ul>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-folder-share"></i> Shared Folder Configuration</h3>
+                <pre class="overflow-x-auto text-sm mb-4"><code class="language-bash font-mono"># Create and link new policy
+    # Right-click department → "Create a policy and link to this department"</code></pre>
+        
+                <p class="text-gray-300 mb-2">In GPUI:</p>
+                <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">Computer → Settings → System Settings → Network drives</p>
+        
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-400 font-medium">Required Settings:</p>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Action: Update</li>
+                            <li>Path: smb://server-name/samba</li>
+                            <li>Reconnect: Enabled</li>
+                            <li>Name: samba</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 font-medium">Drive Options:</p>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Disk Name: Use [Letter] (e.g. F)</li>
+                            <li>Show disk</li>
+                            <li>Show all disks</li>
+                        </ul>
+                    </div>
+                </div>
+        
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-check-circle"></i>
+                        <span>After configuration, restart computers to apply changes.</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="alert alert-warning shadow-lg">
+                <div>
+                    <i class="fas fa-language"></i>
+                    <span>UI can be translated to Russian via: <strong>Settings → Language</strong> (ADMC) or <strong>View</strong> menu (GPUI)</span>
+                </div>
+            </div>
+        </section>     
+        
+        <section id="docker" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-brands fa-docker"></i> Docker Container Deployment</h2>
+            <p class="text-gray-300 mb-2">Using Docker for application deployment with local registry.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-box"></i> Docker Setup</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install Docker Engine
+apt-get update && apt-get install -y docker-engine
+systemctl enable --now docker.service
+
+# Launch local registry
+docker run -d -p 5000:5000 --restart=always --name DockerRegistry registry:2</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-globe"></i> Nginx Web Server</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Dockerfile</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-dockerfile font-mono">FROM nginx:alpine
+COPY index.html /usr/share/nginx/html</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">index.html</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-html font-mono">&lt;html&gt;
+    &lt;body&gt;
+        &lt;center&gt;&lt;h1&gt;&lt;b&gt;WEB&lt;/b&gt;&lt;/h1&gt;&lt;/center&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+                </div>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Build and Run</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Build and push image
+docker build -t localhost:5000/web:1.0 .
+docker push localhost:5000/web:1.0
+
+# Test registry
+docker rmi localhost:5000/web:1.0
+docker pull localhost:5000/web:1.0
+
+# Run container
+docker run -d -p 80:80 --restart=always --name web localhost:5000/web:1.0
+
+# Verify
+docker ps
+curl localhost</code></pre>
+                </div>
+            </div>
+        </section>  
+        
+        <section id="zabbix" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-chart-line"></i> Zabbix Monitoring System</h2>
+            <p class="text-gray-300 mb-2">Centralized monitoring with PostgreSQL backend.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-database"></i>
+                    <span>Requires PostgreSQL server installed first.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-server"></i> Database Setup</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install packages
+apt-get update && apt-get install -y postgresql16-server zabbix-server-pgsql
+
+# Initialize PostgreSQL
+/etc/init.d/postgresql initdb
+systemctl enable --now postgresql.service
+
+# Create Zabbix user and DB
+su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted -P zabbix'
+su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+
+# Import schemas
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/schema.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/images.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/data.sql zabbix'</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-desktop"></i> Web Interface</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install dependencies
+apt-get install -y apache2 apache2-mod_php8.2 # installing the package apache2 and addon apache2 mod_php
+systemctl enable --now httpd2 # enabling and adding httpd2 to startup
+
+apt-get install -y php8.2 php8.2-{mbstring,sockets,gd,xmlreader,pgsql,ldap,openssl} 
+# installing the package php
+
+# Edit configuration file php.ini:
+vim /etc/php/8.2/apache2-mod_php/php.ini 
+
+> max_execution_time = 600
+> max_input_time = 600
+> memory_limit = 256M
+> post_max_size = 32M
+> date.timezone = Europe/Moscow
+> always_populate_raw_post_data = -1
+
+# Edit configuration file zabbix_server.conf:
+vim /etc/zabbix/zabbix_server.conf
+
+DBHost = localhost 
+DBName = zabbix
+DBUser = zabbix
+DBPassword = zabbixpwd
+        
+systemctl enable --now zabbix_pgsql # enabling and adding zabbix_pgsql to startup
+
+# Zabbix frontend
+apt-get install -y zabbix-phpfrontend-{apache2,php8.2}
+ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+chown apache2:apache2 /var/www/webapps/zabbix/ui/conf
+
+# Finalize
+systemctl restart httpd2</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-laptop"></i> Agent Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install agent
+apt-get install -y zabbix-agent
+
+# Configure agent
+vim /etc/zabbix/zabbix_agentd.conf
+> Server = [IP Server]
+> ServerActive = [IP Server]
+> Hostname = [FullHostname]
+
+systemctl enable --now zabbix_agentd</code></pre>
+                
+
+                <div class="bg-base-200 rounded-box p-4 mt-4">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-laptop"></i> Add host</h3>
+                    <div class="alert alert-info shadow-lg mt-4">
+                        <div>
+                            <i class="fas fa-browser"></i>
+                            <span>Add hosts in web interface: <strong>Monitoring → Hosts → Create host</strong></span>
+                        </div>
+                    </div>                    
+                    <p class="test-gray-400 font-medium">Required:</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Host name: [FullHostname]</li>
+                        <li>Visible name: [FullHostname]</li>
+                        <li>Templates: [Linux by Zabbix agent]</li>
+                        <li>Groups: [Linux servers OR ANY]</li>
+                        <li>Interfaces: Agent [IP] [Fullhostname] [ConnectIP]</li>
+                    </ul>
+                    <p class="text-gray-300">If that all, click "Add"</p>
+                </div>
+
+            </div>
+        </section>        
+
+        <section id="nginx_web_server" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Nginx Reverse Proxy</h2>
+            <p class="text-gray-300 mb-2">Configuration as reverse proxy for multiple services.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cog"></i> Basic Setup</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install nginx
+        apt-get install -y nginx</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sliders-h"></i> Proxy Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-nginx font-mono"># /etc/nginx/sites-available.d/proxy.conf
+        server {
+            listen 80;
+            server_name www.[domain];
+            location / {
+                proxy_pass http://[BACKEND_IP];
+            }
+        }
+        
+        server {
+            listen 80;
+            server_name zabbix.[domain];
+            location / {
+                proxy_pass http://[ZABBIX_IP]/zabbix;
+            }
+        }</code></pre>
+                
+                <pre class="overflow-x-auto text-sm mt-2"><code class="language-bash font-mono"># Enable configuration
+        ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+        nginx -t
+        systemctl enable --now nginx</code></pre>
+            </div>
+        </section>
+        
+        <section id="ansible" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-robot"></i> Ansible Control Node</h2>
+            <p class="text-gray-300 mb-2">Centralized configuration management setup.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-key"></i>
+                    <span>Ensure SSH keys are configured for passwordless access.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Installation</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install Ansible with SSH support
+apt-get install -y ansible sshpass
+
+# Set permissions
+chown -R root:user /etc/ansible
+chmod 750 /etc/ansible</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-file-code"></i> Configuration</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">inventory</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-yaml font-mono">all:
+inventory:
+  Networking:
+    hosts:
+    router1:
+  Servers:
+    hosts:
+    server1:
+  Clients:
+    hosts:
+    client1:</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">ansible.cfg</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-ini font-mono">[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False</code></pre>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-folder"></i> Group Variables</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-yaml font-mono"># group_vars/all.yml
+ansible_ssh_user: admin
+ansible_ssh_pass: P@ssw0rd
+ansible_python_interpreter: /usr/bin/python3
+
+# group_vars/Networking.yml
+ansible_connection: network_cli
+ansible_network_os: ios</code></pre>
+                
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-check"></i>
+                        <span>Test connectivity with: <code>ansible -m ping all</code></span>
+                    </div>
+                </div>
+            </div>
+        </section>        
+    </div>
+</div>
+{% endblock %}

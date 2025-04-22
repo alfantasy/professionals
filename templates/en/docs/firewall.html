@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Firewall Docs - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-fire text-blue-400 mr-2"></i>Firewall Documentation
+        </h1>
+        <strong class="text-gray-300">This section contains information about firewalls.</strong>
+        <p class="text-gray-300">The section contains information about the firewall environment, its settings, and how to use it.</p>
+        <p class="text-gray-300">But, this settings for Graphical Firewall - Ideco NGFW.</p>
+        <div class="divider"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#fw-basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Basic Setup</a>
+    </div>
+
+    <div class="space-y-12">
+        <section id="fw-basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">Basic Configuration</h2>
+            <p class="text-gray-300 mb-2">Initial setup through graphical interface for firewall management.</p>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-desktop"></i>
+                    <span>All configuration is done via web interface</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-signature"></i> System Identity</h3>
+                <div class="flex items-start gap-4">
+                    <div class="flex-1">
+                        <p class="text-gray-300 mb-2">Steps:</p>
+                        <ol class="list-decimal pl-5 text-gray-300 space-y-1">
+                            <li>Navigate to top-left corner</li>
+                            <li>Find "Name" field</li>
+                            <li>Enter new hostname</li>
+                        </ol>
+                    </div>
+                    <div class="mockup-browser border bg-base-300 flex-1">
+                        <div class="mockup-browser-toolbar">
+                            <div class="input">https://[IP]:8443</div>
+                        </div>
+                        <div class="px-4 py-8 bg-base-200 text-center">
+                            <i class="fas fa-server text-4xl mb-2"></i>
+                            <p>Hostname Configuration</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> Interface Configuration</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">First Interface</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Click "Edit" on existing interface</li>
+                            <li>Assign descriptive name</li>
+                            <li>Add to appropriate security zone</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Second Interface</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Click "Add Interface"</li>
+                            <li>Configure IP settings</li>
+                            <li>Assign to security zone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-route"></i> OSPF Configuration</h3>
+                <div class="alert alert-warning shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Important: Disable all checkboxes before configuration</span>
+                    </div>
+                </div>
+                <ol class="list-decimal pl-5 text-gray-300 space-y-2">
+                    <li>Enable OSPF protocol</li>
+                    <li>Add interfaces with:
+                        <ul class="list-disc pl-5 mt-1">
+                            <li>Interface name</li>
+                            <li>Zone/Area name</li>
+                            <li>Route cost</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-user-shield"></i> Internet Access</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">User Creation</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Navigate to: Users → Accounts</li>
+                            <li>Click account-plus icon</li>
+                            <li>Set:
+                                <ul class="list-circle pl-5">
+                                    <li>Name: <code>network</code></li>
+                                    <li>Login: <code>network</code></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Authorization</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Go to: Users → Authorization</li>
+                            <li>Set:
+                                <ul class="list-circle pl-5">
+                                    <li>User: <code>network</code></li>
+                                    <li>Subnet: <code>[IP/Mask]</code></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

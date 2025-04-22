@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Work in network! System administration on Linux.{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[70vh] bg-gray-800 rounded-lg border border-gray-700">
+    <div class="hero-content text-center">
+        <div class="max-w-2xl">
+            <h1 class="text-5xl font-bold mb-6 text-white">Welcome to InfoSecurity Project</h1>
+            <p class="text-xl mb-6 text-gray-300">Your comprehensive resource for Linux system administration and cybersecurity</p>
+
+            <!-- Updated grid with 3 cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Card 1 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-network-wired mr-2 text-blue-400"></i>Network Administration
+                    </h2>
+                    <p class="text-gray-400">Master Linux networking, Cisco systems, and firewall configuration.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in delay-100">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-lock mr-2 text-blue-400"></i>Security Useful Tools
+                    </h2>
+                    <p class="text-gray-400">Learn about cybersecurity best practices and tools.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in delay-200">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-server mr-2 text-blue-400"></i>System Configuration
+                    </h2>
+                    <p class="text-gray-400">Complete guides for server setup and maintenance.</p>
+                </div>
+            </div>
+
+            <div class="mb-8 text-left space-y-4">
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+                    InfoSecurity is a special project for information security. This site serves as a knowledge base for system administration on Linux.
+                </p>
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-comments mr-2 text-blue-400"></i>
+                    Any questions, suggestions, and comments are welcome.
+                </p>
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-book mr-2 text-blue-400"></i>
+                    Documentation on Alt Linux, Cisco Packet Tracer, Firewall, Cyber Backup and Terraform is provided here.
+                </p>
+            </div>
+
+            <a href="/en/docs" class="btn btn-primary btn-lg">
+                <i class="fas fa-arrow-right mr-2"></i>Explore Documentation
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Animation -->
+<style>
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
+}
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+</style>
+{% endblock %}

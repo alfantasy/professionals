@@ -1,0 +1,1007 @@
+{% extends "base.html" %}
+
+{% block title %}Alt Linux документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fab fa-linux text-blue-400 mr-2"></i>Документация по Alt Linux
+        </h1>            
+        <strong class="text-gray-300">Данный раздел содержит информацию об Alt Linux.</strong>
+        <p class="text-gray-300">В разделе есть так называемые "подразделы", которые будут разделены на элементы настроек различных пакетов, самой системой с примерами в виде "кусочков" кода и скриншотов.</p>
+        <p class="text-gray-300">Alt Linux - отечественная операционная система, основанная на ядре Linux и на дистрибутиве Mandriva.</p>
+        <p class="text-gray-300">Применение Alt на данный момент - это системное администрирование на замену Windows Server.</p>
+        <div class="divider"></div>
+    </div>
+
+    <!-- Subsection navigation -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Базовые настройки</a>
+        <a href="#networking" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>Адресация</a>
+        <a href="#nataddressing" class="btn btn-sm"><i class="fa-solid fa-hexagon-nodes"></i>NAT</a>
+        <a href="#openvswitch" class="btn btn-sm"><i class="fa-solid fa-circle-nodes"></i>Open vSwitch</a>
+        <a href="#dns-config" class="btn btn-sm"><i class="fa-solid fa-circle-nodes"></i>DNS сервер</a>
+        <a href="#ntp-config" class="btn btn-sm"><i class="fa-solid fa-timeline"></i>NTP протокол</a>
+        <a href="#samba" class="btn btn-sm"><i class="fa-solid fa-user-tag"></i>Samba AD</a>
+        <a href="#backup-config" class="btn btn-sm"><i class="fa-solid fa-person-chalkboard"></i>Бэкапы</a>
+        <a href="#domain-management" class="btn btn-sm"><i class="fa-solid fa-users-gear"></i>Управление доменом</a>
+        <a href="#docker" class="btn btn-sm"><i class="fa-brands fa-docker"></i>Docker</a>
+        <a href="#zabbix" class="btn btn-sm"><i class="fa-solid fa-globe"></i><i class="fa-solid fa-users"></i>Zabbix</a>
+        <a href="#nginx_web_server" class="btn btn-sm"><i class="fab fa-webflow"></i>Nginx Веб-сервер</a>
+        <a href="#ansible" class="btn btn-sm"><i class="fa-solid fa-robot"></i>Ansible</a>
+    </div>    
+
+    <div class="space-y-12">
+        <section id="basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fas fa-cog mr-2"></i> Базовые настройки</h2>
+            <!-- Content here -->
+            <p class="text-gray-300">Базовая настройка включает в себя наименование системы, создание юзеров, назначение их как локальных администраторов системы кроме суперпользователя. Юзеров, которые будут считаться локальными, будем добавлять в файл sudoers</p>
+            <p class="text-gray-300">И так, начнем с самого простого, наименование системы:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 p-2 bg-gray-900 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">hostnamectl set-hostname [full_name_with_domain]
+# Назначение хостнейма - чаще всего производится вместе с доменом.    </code></pre>
+            </div>            
+            <p class="text-gray-300 ">Назначение имени системы необходима для определения её, например, когда компьютер в домене, основной контроллер будет считывать наименования систем и идентифицировать их подобным образом.</p>
+            <p class="text-gray-300 ">Создание пользователя:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">useradd [NAME] -m -U -s /bin/bash </code></pre>
+            </div>
+            <p class class="text-gray-300 ">Ключ -m необходим для создания домашней директории пользователя, ключ -U необходим для автоматической создании группы для созданного пользователя</p>
+            <p class class="text-gray-300 ">Ключ -s необходим для указания командной оболочки.</p>
+            <p class="text-gray-300 ">Добавляем пользователя в группу администраторов.</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">usermod -aG wheel [NAME] </code></pre>
+            </div>
+            <p class="text-gray-300 ">Данная команда позволяет нам перенести пользователя в специальную группу "администраторов" (в системе называется как "колесо")</p>
+            <p class="text-gray-300 ">Даем административные привелегии.</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">                
+                <pre class="m-0 p-0"><code class="language-bash">echo "[NAME] ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers</code></pre>
+            </div>
+            <p class="text-gray-300 ">Команда позволяет дописать в файл sudoers пользователя для обращения к системе без ввода пароля. (sudo su -)</p>
+
+            <p class="text-gray-300 mb-2">Следующие настройки предназначены для облачных машин.</p>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle text-grey-500"></i>
+                    <span><strong>Важно! </strong>Все приведенные настройки ниже являются общепринятыми. И одновременно, они являются временными решениями.</span>
+                    <span>К примеру, будут приведены настройки для переведения машины в однопользовательский режим с инициализацией оболочки Bash.</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center my-4">
+                <div class="max-w-lg rounded-lg overflow-hidden shadow-lg border border-gray-200">
+                    <img src="images/screen_in_grub.png" alt="Пример строчки из GRUB" class="w-full h-auto">
+                    <div class="px-4 py-2 bg-gray-50 border-t border-gray-200">
+                        <p class="text-sm text-gray-600 text-center">Рис. 1: Пример необходимой строчки для изменения в GRUB</p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-gray-300 mb-2">По рисунку №1, нам необходимо убрать: <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">console=tty0 console=tty0S0,115200n8</code></pre>Иначе будет инициализироваться консоль.</p>
+            <p class="text-gray-300 mb-2">Кроме этого, вместо ro ставим rw, чтобы можно было менять файлы системы и в конце добавляем: <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">init=/bin/bash</code></pre></p>
+
+            <div class="flex justify-center my-4">
+                <div class="max-w-lg rounded-lg overflow-hidden shadow-lg border border-gray-200">
+                    <img src="images/screen_bash_in_oneuser.png" alt="Bash в однопользовательском режиме" class="w-full h-auto">
+                    <div class="px-4 py-2 bg-gray-50 border-t border-gray-200">
+                        <p class="text-sm text-gray-600 text-center">Рис. 2: Пример приглашения Bash в однопользовательском режиме</p>
+                    </div>
+                </div>
+            </div>            
+
+            <p class="text-gray-300 mb-2">При помощи однопользовательского режима, мы можем проверить, работает ли у нас система в целом, но кроме этого, локально её администрировать от Root.</p>
+        </section>
+
+        <section id="networking" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Сетевое подключение (Адресация)</h2>
+        
+            <p class="text-gray-300">Адресация в Alt основана на ручной настройке сетевых интерфейсов и указании IP-адресов напрямую в системе.</p>
+            <p class="text-gray-300">Например, создадим интерфейс и зададим параметры вручную:</p>
+        
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">mkdir /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА] # Создаём директорию для интерфейса
+cat <<EOF > /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]/options # Создаём конфигурационный файл
+    > BOOTPROTO=static 
+    > TYPE=eth
+    > CONFIG_IPV4=yes
+    > DISABLED=no
+    > NM_CONTROLLED=no
+EOF                    
+
+или
+
+vim /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]/options
+> BOOTPROTO=static
+> TYPE=eth
+> CONFIG_IPV4=yes
+> DISABLED=no
+> NM_CONTROLLED=no
+
+# ESC и вводим :wq! — выход из VIM с сохранением.</code></pre>
+            </div>
+        
+            <p class="text-gray-300"><strong>BOOTPROTO</strong> — определяет тип настройки IP (в данном случае статический).</p>
+            <p class="text-gray-300">Если требуется динамическое получение адреса — используйте <code class="font-mono">dhcpv4</code> или <code class="font-mono">dhcp</code>.</p>
+            <p class="text-gray-300"><strong>TYPE</strong> — тип адаптера (например, ethernet).</p>
+            <p class="text-gray-300"><strong>DISABLED</strong> — будет ли адаптер отключён.</p>
+            <p class="text-gray-300"><strong>NM_CONTROLLED</strong> — управляется ли адаптер NetworkManager'ом.</p>
+            <p class="text-gray-300"><strong>CONFIG_IPV4</strong> — включает поддержку IPv4 на интерфейсе.</p>
+        
+            <p class="text-gray-300 mb-2">Пропишем IP-адрес:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">echo "[IP]/[Маска]" > /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]/ipv4address</code></pre>
+            </div>
+        
+            <p class="text-gray-300 mb-2">Пропишем шлюз:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">echo "default via [IP-Шлюза]" > /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]/ipv4route</code></pre>
+            </div>
+        
+            <p class="text-gray-300 mb-2">Перезапускаем сетевую службу:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl restart network</code></pre>
+            </div>
+        
+            <p class="text-gray-300 mb-2">Проверяем статус службы:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl status network</code></pre>
+            </div>
+        
+            <p class="text-gray-300 mb-2">Проверяем назначенные параметры:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">
+ip -c --br a # проверяем IP-адреса и состояние интерфейсов
+ip -c r     # проверяем маршрут по умолчанию (шлюз)
+                </code></pre>
+            </div>
+        </section>
+        
+
+        <section id="nataddressing" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-hexagon-nodes"></i> Временная настройка для NAT-адресации
+            </h2>
+            <p class="text-gray-300">Временная настройка необходима для экстренного подключения к интернету.</p>
+            <p class="text-gray-300">Однако все параметры являются временными и действуют только до перезагрузки машины. По соображениям безопасности рекомендуется использовать этот способ вместо ручного назначения через etcnet.</p>
+            <p class="text-gray-300">Пример настройки:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">
+ip link add link [NAME-INTERFACE] name [NAME-INTERFACE].[ID VLAN] type vlan id [ID VLAN] # создаём виртуальный интерфейс на основе основного
+ip link set dev [NAME-INTERFACE] up # поднимаем основной адаптер
+ip link set dev [NAME-INTERFACE].[ID VLAN] up # поднимаем виртуальный адаптер
+ip addr add [IP-адрес]/[Маска] dev [NAME-INTERFACE].[ID VLAN] # назначаем IP-адрес на виртуальный адаптер
+ip route add 0.0.0.0/0 via [IP-адрес шлюза] # назначаем маршрут по умолчанию
+                </code></pre>
+            </div>
+        </section>        
+
+        <section id="openvswitch" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-circle-nodes"></i> Open vSwitch — базовая коммутация в Linux
+            </h2>
+            <p class="text-gray-300">Open vSwitch — один из важнейших пакетов для работы с сетью в Linux, представляющий собой виртуальный коммутатор.</p>
+            <p class="text-gray-300">Необходимо установить пакет:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">apt-get install openvswitch</code></pre>
+            </div>
+            <p class="text-gray-300">Затем нужно назначить все интерфейсы виртуальному коммутатору:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">mkdir /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]# Создаём конфигурационный файл
+cat <<EOF > /etc/net/ifaces/[ИМЯ-ИНТЕРФЕЙСА]/options
+    TYPE=eth
+    BOOTPROTO=static
+EOF
+
+cp /etc/net/ifaces/[Первый ИНТЕРФЕЙС]/options /etc/net/ifaces/[Следующий ИНТЕРФЕЙС]/options # Копируем конфиг на все интерфейсы
+systemctl restart network # Перезапускаем сетевой сервис</code></pre>
+            </div>
+            <p class="text-gray-300">Для продолжения необходимо создать управляющий интерфейс:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">mkdir /etc/net/ifaces/MGMT
+# Создаём конфигурационный файл
+vim /etc/net/ifaces/MGMT/options
+> TYPE=ovsport
+> BOOTPROTO=static
+> CONFIG_IPV4=yes
+> BRIDGE=ИМЯ-МОСТА ИЛИ СИСТЕМЫ
+> VID=ID VLAN</code></pre>
+            </div>
+            <p class="text-gray-300"><strong>TYPE</strong> указывает тип адаптера — в нашем случае это <strong><i>ovsport</i></strong>, так как используется Open vSwitch.</p>
+            <p class="text-gray-300">Не забудьте удалить специальную опцию в <code>/etc/net/ifaces/default/options</code>:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">vim /etc/net/ifaces/default/options
+> OVS_REMOVE=no</code></pre>
+            </div>
+            <p class="text-gray-300">Мы отключаем автоматическое управление Open vSwitch, так как настраиваем вручную.</p>
+            <p class="text-gray-300">Перезапускаем сетевой сервис:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">systemctl restart network</code></pre>
+            </div>
+            <p class="text-gray-300">Теперь можно посмотреть красиво оформленный вывод IP-адресов в системе:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ip -c --br a</code></pre>
+            </div>
+            <p class="text-gray-300">Теперь можно задать специальные параметры для Open vSwitch:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ovs-vsctl add-br [ИМЯ-МОСТА] # создаём мост
+ovs-vsctl add-port [ИМЯ-МОСТА] [ИНТЕРФЕЙС] # добавляем интерфейс в мост
+или
+ovs-vsctl add-port [ИМЯ-МОСТА] [ИНТЕРФЕЙС] [TRUNK/TAG]=[НОМЕР или СПИСОК через запятую] # добавляем интерфейс с trunk/tag
+# Пример:
+ovs-vsctl add-port SW ens19 trunk=3213,3212,3211</code></pre>
+            </div>
+            <p class="text-gray-300">В данном случае вы создаёте порт на мосту с указанием интерфейса и типа трафика. Trunk — транковый режим.</p>
+            <p class="text-gray-300">При использовании tag можно указать один VLAN ID.</p>
+            <p class="text-gray-300">Проверить настройки Open vSwitch можно командой <strong>ovs-vsctl show</strong></p>
+            <p class="text-gray-300">Не забудьте включить модуль ядра 8021q:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">modprobe 8021q
+echo "8021q" | tee -a /etc/modules # включаем модуль на постоянной основе
+lsmod | grep "8021q" # проверка работы модуля</code></pre>
+            </div>
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> Если модуль ядра 8021q не активирован, пакеты ping-pong не будут проходить.</span>
+                </div>
+            </div>
+            <p class="text-gray-300">Настройка STP-протокола в Open vSwitch осуществляется с помощью базовых команд:</p>
+            <div class="inline-block max-w-full rounded-xl border border-gray-700 bg-gray-900 p-2 my-2 text-sm font-mono leading-relaxed overflow-x-auto">
+                <pre class="m-0 p-0"><code class="language-bash">ovs-vsctl set bridge [ИМЯ-МОСТА] stp_enable=true # включаем STP-протокол
+ovs-vsctl set bridge [ИМЯ-МОСТА] other_config:stp-priority=[16384 ИЛИ ЛЮБОЕ ДРУГОЕ ЧИСЛО] # указываем приоритет (меньше — выше шанс быть root)</code></pre>
+            </div>
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> Настройки STP должны быть выполнены на каждом виртуальном коммутаторе без исключения, иначе при ошибках возникнет петля коммутации, выход из которой возможен только через "Устранение неисправностей" — с использованием ARPING и других методов.</span>
+                </div>
+            </div>
+        </section>        
+
+        <section id="dns-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-circle-nodes"></i> Настройка DNS-сервера</h2>
+            <p class="text-gray-300 mb-2">Настройка DNS-сервера с использованием BIND, включая резервирование и базовую безопасность.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                  <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                  <span><strong>Важно!</strong> Неправильная конфигурация может нарушить работу сети. Будьте осторожны с конфигурационными файлами!</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Начальная настройка и конфигурация</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Временный DNS для установки пакетов
+echo "nameserver 77.88.8.8" > /etc/resolv.conf
+
+apt-get update && apt-get install -y bind bind-utils
+
+vim /etc/bind/options.conf
+> listen-on { 127.0.0.1; [IP машины]; };
+> listen-on-v6 { any; };
+> forwarders { 77.88.8.8; };
+> allow-query { [Первая IP-подсеть]; [Вторая IP-подсеть]; };
+> allow-transfer { [IP вторичного DNS-сервера]; };
+
+:wq!
+
+systemctl enable --now bind
+
+cat <<EOF > /etc/net/ifaces/[ИНТЕРФЕЙС]/resolv.conf
+    search [ДОМЕН]
+    nameserver [IP локального DNS-сервера]
+EOF
+
+systemctl restart network bind
+
+ping -c3 ya.ru</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-shield-alt"></i> Резервный DNS-сервер (вторичный)</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">vim /etc/bind/options.conf
+> listen-on { 127.0.0.1; [IP машины]; };
+> listen-on-v6 { none; };
+> forwarders { 77.88.8.8; };
+> allow-query { [Первая IP-подсеть]; [Вторая IP-подсеть]; };
+> allow-transfer { none; };
+
+control bind-slave enabled
+
+cat <<EOF > /etc/net/ifaces/[ИНТЕРФЕЙС]/resolv.conf
+search [ДОМЕН]
+nameserver [Первичный DNS]
+nameserver [Вторичный DNS]
+EOF
+
+systemctl restart network && systemctl enable --now bind</code></pre>
+            </div>
+        
+            <div class="alert alert-error shadow-lg">
+                <div>
+                    <i class="fas fa-bug text-red-800"></i>
+                    <span><strong>Исправление ошибки BIND:</strong> Если BIND выдаёт ошибку прав доступа, выполните:</span>
+                </div>
+            </div>
+            <pre class="mt-2"><code class="language-bash">control bind-chroot disabled</code></pre>
+        </section>        
+
+        <section id="ntp-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-clock"></i> Настройка протокола NTP
+            </h2>
+            <p class="text-gray-300 mb-2">Настройка NTP-сервера с использованием Chrony для синхронизации времени с внешним источником.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> Убедитесь, что настройки NTP-сервера корректны, чтобы поддерживать точную синхронизацию времени.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Первичная настройка и конфигурация</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install chrony # установка пакета
+        
+vim /etc/chrony.conf  
+> server [IP NTP-сервера] iburst prefer # указать сервер синхронизации
+> local stratum [N] # при необходимости задать уровень stratum
+> allow [IP-подсеть] # указать допустимые подсети
+
+:wq! - выход и сохранение файла
+
+systemctl enable --now chronyd # включение и автозапуск chronyd
+
+chronyc sources # проверка источников синхронизации
+
+timedatectl # проверка текущего часового пояса
+
+# На других машинах, подключающихся к NTP-серверу:
+apt-get install chrony 
+vim /etc/chrony.conf 
+> server [IP NTP-сервера] iburst prefer 
+
+:wq! 
+
+systemctl enable --now chronyd</code></pre>
+            </div>
+        
+            <div class="alert alert-error shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-bug text-red-800"></i>
+                    <span><strong>Решение проблем с NTP:</strong> Если Chrony не синхронизируется, проверьте конфигурацию или перезапустите службу.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sync-alt"></i> Синхронизация с внешним NTP-сервером</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Для синхронизации с NTP-сервером используйте команды:
+        
+chronyc tracking # текущий статус синхронизации
+chronyc sources -v # список источников времени
+
+systemctl restart chronyd # перезапуск chronyd при проблемах
+
+# Повторная проверка статуса
+chronyc tracking</code></pre>
+            </div>
+        </section>        
+
+        <section id="samba" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                <i class="fa-solid fa-network-wired"></i> Инфраструктура SAMBA AD домена
+            </h2>
+            <p class="text-gray-300 mb-2">Настройка инфраструктуры Samba для домена с интеграцией DNS и конфигурацией Kerberos.</p>
+        
+            <div class="flex flex-wrap gap-2 mb-2">
+                <a href="#samba-install" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Установка</a>
+                <a href="#samba-config" class="btn btn-sm"><i class="fas fa-cogs mr-2"></i>Конфигурация</a>
+                <a href="#samba-join" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Подключение</a>
+                <a href="#samba-backup" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Резервное копирование DC</a>
+                <a href="#samba-shared" class="btn btn-sm"><i class="fas fa-key mr-2"></i>Общий доступ</a>
+            </div>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> Убедитесь, что BIND настроен правильно перед настройкой Samba для корректной работы домена.</span>
+                </div>
+            </div>
+            
+            <div id="samba-install" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Установка Samba AD</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install -y task-samba-dc # установка пакета SAMBA AD
+control bind-chroot disabled # отключение режима CHROOT для BIND
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind 
+# Отключаем кэш krb5kdc в BIND, чтобы Samba могла работать с Kerberos.
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf 
+# Добавляем пути к файлам Samba в конфигурацию BIND
+
+vim /etc/bind/options.conf 
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes;
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # выход из VIM с сохранением
+
+systemctl stop bind # остановка BIND
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Удаление старых конфигов, директорий и создание папки SYSVOL
+
+samba-tool domain provision # инициализация домена</code></pre>
+            </div>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> При выборе модуля, так как мы использовали DNS на ранних этапах. DNS Backend: BIND9_DLZ.</span>
+                </div>
+            </div>
+        
+            <p class="text-gray-300 mb-4">Продолжаем конфигурацию.</p>
+        
+            <div id="samba-config" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Конфигурация Samba AD</h3>            
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">systemctl enable --now samba && systemctl start bind 
+# Запуск Samba AD с добавлением автозапуска и bind
+
+cp /var/lib/samba/private/krb5.conf /etc/krb5.conf # копирование конфигурационного файла Kerberos из частной директории Samba в основную.
+
+# Добавление записей типа A, PTR и CNAME:
+    
+# Запись типа A добавляется следующим образом:
+samba-tool dns add 127.0.0.1 [domain-name] [machine-name] A [IP machine] -U[Name Admininstrator] -p[Password]
+# Пример заполнения записи A:
+samba-tool dns add 127.0.0.1 gosgov.ru client.gosgov.ru A 38.0.101.76 -Uadmin -padmin
+
+samba-tool dns query 127.0.0.1 [domain-name] @ A # проверка добавления записи типа A
+    
+# Записи типа PTR добавляются следующим образом:
+samba-tool dns zonecreate 127.0.0.1 [Reverse-IP].in-addr.arpa # добавление зоны записи 
+    
+samba-tool dns zonelist 127.0.0.1 # проверка наличия добавленной зоны
+
+samba-tool dns add 127.0.0.1 [Reverse-IP].in-addr.arpa [Last-Host-NumIP] PTR [Full-Domain-Name with Hostname] 
+# Прямое добавление записи PTR. Пример заполнения:
+samba-tool dns add 127.0.0.1 10.10.10.in-addr.arpa 1 PTR client.gosgov.ru
+
+# Записи типа CNAME добавляются следующим образом:
+samba-tool dns add 127.0.0.1 [Domain Name] [NAME-SITE] CNAME [Full-Domain-Name with Hostname] -U[Name Admininstrator] -p[Password]
+# Пример добавления записи CNAME:
+samba-tool dns add 127.0.0.1 gosgov.ru www CNAME server.gosgov.ru -Uadmin -padmin
+
+# Создание групп и пользователей:
+samba-tool group add [NAME] -U[Name Admininstrator] -p[Password] 
+# Создание группы пользователей. Пример:
+samba-tool group add users -Uadmin -padmin
+
+# Создание пользователей:
+samba-tool user add [NAME] [Password] -U[Name Admininstrator] -p[Password]
+# Пример создания пользователя:
+samba-tool user add user resu -Uadmin -padmin
+
+# Отключение параметров EXPIRATION и добавление пользователя в группу:
+samba-tool user setexpiry [NAME-USER] --noexpiry 
+# Изменение параметра EXPIRATION. Пример:
+samba-tool user setexpiry user --noexpiry
+
+samba-tool group addmembers "[NAME-GROUP]" [NAME-USER] 
+# Добавление пользователя в группу. Пример:
+samba-tool group addmembers "users" user
+
+samba-tool ou add 'OU=[NAME]'
+# Добавление подразделения. Пример:
+samba-tool ou add 'OU=IT'</code></pre>
+            </div>
+            <div class="alert alert-error shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-bug text-red-800"></i>
+                    <span><strong>Исправление ошибок для BIND или Samba:</strong> Если проблемы продолжаются, убедитесь, что все шаги настройки выполнены правильно.</span>
+                </div>
+            </div>
+        
+            <div id="samba-join" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Подключение к домену Samba</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">samba-tool domain join [DOMAIN-NAME] DC -U[AdminName] --realm=[DOMAIN-NAME] --dns-backend=BIND9_DLZ
+# Подключение к домену
+
+systemctl enable --now samba bind # включение и запуск Samba с BIND
+
+# Пример репликации:
+samba-tool drs replicate [Machine DC From] [Machine DC To] dc=[Domain-2L],dc=[Domain-1L] -U[AdminName] -p[Password]
+
+# Пример:
+samba-tool drs replicate dc1.gosgov.ru dc2.gosgov.ru dc=gosgov,dc=ru -Uadmin -padmin</code></pre>
+            </div>
+        
+            <div id="samba-backup" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-terminal"></i> Резервный Samba AD DC</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">apt-get install -y task-samba-dc # установка пакета SAMBA AD 
+control bind-chroot disabled # отключение режима CHROOT (упомянут выше)
+
+systemctl disable --now smb nmb krb5kdc slapd bind 
+# Полное отключение конфликтующих сервисов. 
+
+grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind
+
+grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf
+
+vim /etc/bind/options.conf
+> tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab"; 
+> minimal-responses yes; 
+
+> logging { 
+> category lame-servers { null; };
+> }
+
+:wq! # выход из VIM с сохранением
+
+vim /etc/krb5.conf 
+> default_realm = [DOMAIN-NAME] 
+> dns_lookup_kdc = true 
+> dns_lookup_realm = false 
+
+:wq! # выход из VIM с сохранением
+
+kinit [Name Admininstrator]@[DOMAIN-NAME]
+
+rm -f /etc/samba/smb.conf 
+rm -rf /var/lib/samba
+rm -rf /var/cache/samba
+mkdir -p /var/lib/samba/sysvol 
+# Удаление старых конфигов, частных директорий и создание папки SYSVOL.</code></pre>
+            </div>
+        
+            <div id="samba-shared" class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Конфигурация общего каталога</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">mkdir /opt/data # создание общего каталога
+chmod 777 /opt/data # предоставление максимальных прав всем пользователям
+
+# Переход в конфигурационный файл:
+vim /etc/samba/smb.conf 
+
+# Добавление в конфигурационный файл:
+[SAMBA] 
+    path = /opt/data
+    comment = "SAMBA"
+    public = yes 
+    writable = yes
+    browseable = yes 
+    guest ok = yes
+
+:wq! # выход из VIM с сохранением
+
+systemctl restart samba # перезапуск samba
+
+# Проверка:
+smbclient -L localhost -U[NameAdmin]</code></pre>
+            </div>
+        </section>   
+        
+        <section id="backup-config" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-hard-drive"></i> Реализация резервного копирования</h2>
+            <p class="text-gray-300 mb-2">Настройка системы резервного копирования с использованием единицы службы <code>systemd</code> и таймера для автоматического архивации.</p>
+            
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle text-grey-500"></i>
+                    <span><strong>Важно!</strong> Убедитесь, что <code>/opt/data</code> содержит критические файлы перед продолжением.</span>
+                </div>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cogs"></i> Основная служба резервного копирования</h3>
+                <p class="text-gray-300 mb-3">Создаёт сжатый архив <code>/opt/data</code> по требованию.</p>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Создание каталога для резервных копий
+mkdir -p /var/bac/  
+
+# Создаем конфигурационный файл:
+vim /etc/systemd/system/backup.service 
+
+[Unit]
+Description=Backup service /opt/data 
+
+[Service]
+Type=oneshot 
+ExecStart=/bin/tar -czf "/var/bac/SAMBA.tar.gz" /opt/data 
+
+[Install] 
+WantedBy=multi-user.target 
+
+systemctl daemon-reload # перезапуск и считывание конфигурационных файлов юнитов
+systemctl enable --now backup # включаем и добавляем backup в автозагрузку
+
+# Параллельно включение таймера
+vim /etc/systemd/system/backup.timer 
+
+[Unit]
+Description=Backup service /opt/data Timer 
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true 
+Unit=backup.service 
+
+[Install] 
+WantedBy=timers.target 
+
+:wq! # выход из VIM с сохранением
+
+# После сохранения запуск таймера:
+systemctl daemon-reload 
+systemctl enable --now backup.timer</code></pre>
+            </div>
+        </section>        
+        
+        <section id="domain-management" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Управление доменом</h2>
+            <p class="text-gray-300 mb-2">Управление доменом осуществляется при помощи пакета ADMC на графической оболочке.</p>
+        
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span>Действия требуют административных полномочий.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Начало работы</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Обновление и установки нужных пакетов
+apt-get update && apt-get install -y gpupdate admc gpui
+
+# Включаем модуль групповых политик 
+gpupdate-setup enable
+
+# Выполняется на административной машине:
+kinit [AdminName]@[DOMAIN-NAME]</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sliders-h"></i> Управление политиками</h3>
+                <p class="text-gray-300 mb-3">При помощи ADMC можно управлять политиками.</p>
+                <ol class="list-decimal pl-5 space-y-2 text-gray-300">
+                    <li>Запустите ADMC из приложений</li>
+                    <li>Перейдите в "Объекты групповой политики" → нужный раздел (например, IT)</li>
+                    <li>Щелкните правой кнопкой мыши → "Создать политику и связать с подразделением"</li>
+                    <li>Назовите политику и нажмите OK</li>
+                    <li>Щелкните правой кнопкой мыши по политике → "Изменить..." для запуска GPUI</li>
+                </ol>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2"><i class="fas fa-desktop"></i> Пример: Политика фона рабочего стола</h4>
+                    <p class="text-gray-300 mb-2">Путь в GPUI:</p>
+                    <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">Компьютер → Административные шаблоны → Система ALT → Настройки Mate → Фон рабочего стола</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Установить состояние в "Включено"</li>
+                        <li>Заполнить раздел "Файл"</li>
+                        <li>Отметить опцию "Блокировать"</li>
+                    </ul>
+                </div>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2"><i class="fas fa-wifi"></i> Ограничения сети</h4>
+                    <p class="text-gray-300 mb-2">Путь в GPUI:</p>
+                    <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">Система ALT → Правила Polkit → Ограничения NetworkManager</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Включить "Ограничение возможности включения или отключения сети"</li>
+                        <li>Установить "Отключить параметры" в "Нет"</li>
+                        <li>Отметить "Блокировать"</li>
+                    </ul>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-folder-share"></i> Настройка Общей Папки</h3>
+                <pre class="overflow-x-auto text-sm mb-4"><code class="language-bash font-mono"># Создать и связать новую политику
+    # Щелкните правой кнопкой мыши по отделу → "Создать политику и связать с этим отделом"</code></pre>
+        
+                <p class="text-gray-300 mb-2">В GPUI:</p>
+                <p class="bg-neutral-800 p-2 rounded text-sm font-mono mb-3">Компьютер → Настройки → Настройки системы → Сетевые диски</p>
+        
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-400 font-medium">Необходимые Настройки:</p>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Действие: Обновить</li>
+                            <li>Путь: smb://server-name/samba</li>
+                            <li>Переподключение: Включено</li>
+                            <li>Имя: samba</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 font-medium">Опции Диска:</p>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Имя Диска: Используйте [букву] (например, F)</li>
+                            <li>Показать диск</li>
+                            <li>Показать все диски</li>
+                        </ul>
+                    </div>
+                </div>
+        
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-check-circle"></i>
+                        <span>После конфигурации, перезагрузите компьютеры, чтобы применить изменения.</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="alert alert-warning shadow-lg">
+                <div>
+                    <i class="fas fa-language"></i>
+                    <span>Интерфейс можно перевести на русский язык через: <strong>Настройки → Язык</strong> (ADMC) или меню <strong>Вид</strong> (GPUI)</span>
+                </div>
+            </div>
+        </section>     
+        
+        <section id="docker" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-brands fa-docker"></i> Docker Container Deployment</h2>
+            <p class="text-gray-300 mb-2">Используем Docker для развертывания приложений с локальным регистром.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-box"></i> Установка Docker </h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Устанавливаем Docker Engine
+apt-get update && apt-get install -y docker-engine
+systemctl enable --now docker.service
+
+# Запускаем локальный регистр
+docker run -d -p 5000:5000 --restart=always --name DockerRegistry registry:2</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-globe"></i> Nginx веб</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Dockerfile</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-dockerfile font-mono">FROM nginx:alpine
+COPY index.html /usr/share/nginx/html</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">index.html</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-html font-mono">&lt;html&gt;
+    &lt;body&gt;
+        &lt;center&gt;&lt;h1&gt;&lt;b&gt;WEB&lt;/b&gt;&lt;/h1&gt;&lt;/center&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+                </div>
+        
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Билдим и запускаем</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Билд и загрузка изображения
+docker build -t localhost:5000/web:1.0 .
+docker push localhost:5000/web:1.0
+
+# Тестируем
+docker rmi localhost:5000/web:1.0
+docker pull localhost:5000/web:1.0
+
+# Запускаем контейнер
+docker run -d -p 80:80 --restart=always --name web localhost:5000/web:1.0
+
+# Проверяем
+docker ps
+curl localhost</code></pre>
+                </div>
+            </div>
+        </section>  
+        
+        <section id="zabbix" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-chart-line"></i> Zabbix - система мониторинга</h2>
+            <p class="text-gray-300 mb-2">Централизованный мониторинг с использованием PostgreSQL в качестве базы данных.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-database"></i>
+                    <span>Требуется предварительная установка сервера PostgreSQL.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-server"></i> Настройка базы данных</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Установка пакетов
+apt-get update && apt-get install -y postgresql16-server zabbix-server-pgsql
+
+# Инициализация PostgreSQL
+/etc/init.d/postgresql initdb
+systemctl enable --now postgresql.service
+
+# Создание пользователя и БД для Zabbix
+su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted -P zabbix'
+su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+
+# Импорт схем данных
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/schema.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/images.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-*/data.sql zabbix'</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-desktop"></i> Веб-интерфейс</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Установка зависимостей
+apt-get install -y apache2 apache2-mod_php8.2 # установка apache2 и модуля apache2 mod_php
+systemctl enable --now httpd2 # включение и добавление httpd2 в автозагрузку
+
+apt-get install -y php8.2 php8.2-{mbstring,sockets,gd,xmlreader,pgsql,ldap,openssl} 
+# установка пакета php
+
+# Редактирование конфигурации php.ini:
+vim /etc/php/8.2/apache2-mod_php/php.ini 
+
+> max_execution_time = 600
+> max_input_time = 600
+> memory_limit = 256M
+> post_max_size = 32M
+> date.timezone = Europe/Moscow
+> always_populate_raw_post_data = -1
+
+# Редактирование конфигурации zabbix_server.conf:
+vim /etc/zabbix/zabbix_server.conf
+
+DBHost = localhost 
+DBName = zabbix
+DBUser = zabbix
+DBPassword = zabbixpwd
+        
+systemctl enable --now zabbix_pgsql # включение и добавление zabbix_pgsql в автозагрузку
+
+# Фронтенд Zabbix
+apt-get install -y zabbix-phpfrontend-{apache2,php8.2}
+ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+chown apache2:apache2 /var/www/webapps/zabbix/ui/conf
+
+# Завершение настройки
+systemctl restart httpd2</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-laptop"></i> Настройка агента</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Установка агента
+apt-get install -y zabbix-agent
+
+# Настройка агента
+vim /etc/zabbix/zabbix_agentd.conf
+> Server = [IP Server]
+> ServerActive = [IP Server]
+> Hostname = [FullHostname]
+
+systemctl enable --now zabbix_agentd</code></pre>
+                
+
+                <div class="bg-base-200 rounded-box p-4 mt-4">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-laptop"></i> Добавление хоста</h3>
+                    <div class="alert alert-info shadow-lg mt-4">
+                        <div>
+                            <i class="fas fa-browser"></i>
+                            <span>Добавление хостов в веб-интерфейсе: <strong>Monitoring → Hosts → Create host</strong></span>
+                        </div>
+                    </div>                    
+                    <p class="test-gray-400 font-medium">Обязательные поля:</p>
+                    <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                        <li>Host name: [FullHostname]</li>
+                        <li>Visible name: [FullHostname]</li>
+                        <li>Templates: [Linux by Zabbix agent]</li>
+                        <li>Groups: [Linux servers OR ANY]</li>
+                        <li>Interfaces: Agent [IP] [Fullhostname] [ConnectIP]</li>
+                    </ul>
+                    <p class="text-gray-300">После заполнения нажмите "Add"</p>
+                </div>
+
+            </div>
+        </section>        
+
+        <section id="nginx_web_server" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Nginx в качестве обратного прокси</h2>
+            <p class="text-gray-300 mb-2">Настройка в качестве обратного прокси для нескольких сервисов.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cog"></i> Базовая настройка</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Установка nginx
+        apt-get install -y nginx</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sliders-h"></i> Конфигурация прокси</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># /etc/nginx/sites-available.d/proxy.conf
+server {
+    listen 80;
+    server_name www.[domain];
+    location / {
+        proxy_pass http://[BACKEND_IP];
+        }        
+    }
+        
+    server {
+        listen 80;
+        server_name zabbix.[domain];
+        location / {
+            proxy_pass http://[ZABBIX_IP]/zabbix;
+        }
+    }</code></pre>
+                
+                <pre class="overflow-x-auto text-sm mt-2"><code class="language-bash font-mono"># Активация конфигурации
+ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+nginx -t
+systemctl enable --now nginx</code></pre>
+            </div>
+        </section>
+        
+        <section id="ansible" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-robot"></i> Управляющий узел Ansible</h2>
+            <p class="text-gray-300 mb-2">Настройка централизованного управления конфигурациями.</p>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-key"></i>
+                    <span>Убедитесь, что SSH-ключи настроены для доступа без пароля.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Установка</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Установка Ansible с поддержкой SSH
+apt-get install -y ansible sshpass
+
+# Настройка прав доступа
+chown -R root:user /etc/ansible
+chmod 750 /etc/ansible</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-file-code"></i> Конфигурация</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">inventory</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-yaml font-mono">all:
+inventory:
+  Networking:
+    hosts:
+    router1:
+  Servers:
+    hosts:
+    server1:
+  Clients:
+    hosts:
+    client1:</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">ansible.cfg</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-ini font-mono">[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False</code></pre>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-folder"></i> Групповые переменные</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-yaml font-mono"># group_vars/all.yml
+ansible_ssh_user: admin
+ansible_ssh_pass: P@ssw0rd
+ansible_python_interpreter: /usr/bin/python3
+
+# group_vars/Networking.yml
+ansible_connection: network_cli
+ansible_network_os: ios</code></pre>
+                
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-check"></i>
+                        <span>Проверить подключение: <code>ansible -m ping all</code></span>
+                    </div>
+                </div>
+            </div>
+        </section>        
+    </div>    
+</div>
+{% endblock %}

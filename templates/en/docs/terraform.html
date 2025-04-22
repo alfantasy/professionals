@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+
+{% block title %}Terraform Infrastructure Docs - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-cloud text-blue-400 mr-2"></i>Terraform Infrastructure Documentation
+        </h1>
+        <strong class="text-gray-300">This section contains information about Terraform Infrastructure.</strong>
+        <p class="text-gray-300">The section contains information about the Terraform Infrastructure environment, its settings, and how to use it.</p>
+        <p class="text-gray-300">Terraform Infrastructure - is a cloud infrastructure service.</p>
+        <div class="divider"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#initialization" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Init</a>
+        <a href="#devstack" class="btn btn-sm"><i class="fa-solid fa-cloud"></i>Full complete infrastructure</a>
+    </div>
+
+    <div class="space-y-12">
+        <section id="initialization" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fas fa-cog mr-2"></i> Terraform Infrastructure Init</h2>
+            <p class="text-gray-300 mb-2">Initial setup for Terraform Infrastructure. Management, configuration, and deployment.</p>
+            <p class="text-gray-300">Full settings in initial setup without default examples, this is documentation.</p>
+            
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-cloud"></i>
+                    <span>Requires access to OpenStack cloud API endpoints</span>
+                </div>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Installation</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Download and install Terraform
+wget https://hashicorp-releases.yandexcloud.net/terraform/1.10.3/terraform_1.10.3_linux_amd64.zip
+unzip terraform_1.10.3_linux_amd64.zip -d /usr/local/bin
+        
+# Install OpenStack CLI tools
+apt-get install -y python3-openstackclient python3-pip
+        
+# Install required Python modules
+pip3 install python-octaviaclient python-cinderclient python-novaclient</code></pre>
+            </div>            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cog"></i> Configuration Files</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">~/.terraformrc</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">provider_installation {
+    network_mirror {
+        url = "https://terraform-mirror.mcs.mail.ru"
+        include = ["registry.terraform.io/*/*"]
+    }
+    direct {
+        exclude = ["registry.terraform.io/*/*"]
+    }
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">terraform_cloud.conf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">export TF_VAR_OS_AUTH_URL=[API_URL]
+export TF_VAR_OS_PROJECT_NAME=[PROJECT]
+export TF_VAR_OS_USERNAME=[USERNAME]
+export TF_VAR_OS_PASSWORD=[PASSWORD]
+
+export OS_AUTH_URL=[API_URL]
+export OS_IDENTITY_API_VERSION=3
+export OS_AUTH_TYPE=Password
+export OS_PROJECT_DOMAIN_NAME=[DOMAIN]
+export OS_USER_DOMAIN_NAME=[DOMAIN]</code></pre>
+                    </div>
+                </div>    
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-plug"></i> Provider Configuration</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">provider.tf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">terraform {
+    required_providers {
+        openstack = {
+            source = "terraform-provider-openstack/openstack"
+            version = "2.1.0"
+        }
+    }
+}
+        
+provider "openstack" {
+    auth_url    = var.OS_AUTH_URL
+    tenant_name = var.OS_PROJECT_NAME
+    user_name   = var.OS_USERNAME
+    password    = var.OS_PASSWORD
+    insecure    = true
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">variables.tf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">variable "OS_AUTH_URL" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_PROJECT_NAME" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_USERNAME" {
+    type = string
+    sensitive = true
+}
+
+variable "OS_PASSWORD" {
+    type = string
+    sensitive = true
+}</code></pre>
+                    </div>
+                </div>
+            </div>     
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-play"></i> Initialization</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Load environment variables
+source terraform_cloud.conf
+        
+# Initialize Terraform
+terraform init</code></pre>
+                    </div>
+                    <div class="alert alert-success shadow-lg">
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Successful initialization will display provider installation messages</span>
+                        </div>
+                    </div>
+                </div>
+            </div>                           
+        </section>
+        <section id="devstack" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-cloud"></i> DevStack Infrastructure with Terraform initialization.</h2>
+            <p class="text-gray-300">Full files for DevStack Infrastructure with Terraform.</p>
+            <p class="text-gray-300">This chapter reference with unique parts for anythere file.</p>
+            <p class="text-gray-300">And, you see buttons with name files.</p>
+            <div class="flex flex-wrap gap-2 mb-8">
+                <a href="#devstack-network" class="btn btn-sm">network.tf</a>
+                <a href="#devstack-security" class="btn btn-sm">security.tf</a>
+                <a href="#devstack-instance" class="btn btn-sm">instance.tf</a>
+                <a href="#devstack-variables" class="btn btn-sm">variables.tf</a>
+                <a href="#devstack-cloudinit" class="btn btn-sm">cloud-init.yml</a>
+                <a href="#devstack-loadbalancer" class="btn btn-sm">loadbalancer.tf</a>
+                <a href="#devstack-output" class="btn btn-sm">output.tf</a>
+                <a href="#devstack-templates" class="btn btn-sm">templates.tf</a>
+                <a href="#devstack-cloudinit" class="btn btn-sm">cloudinit.sh</a>
+            </div>
+
+            <section id="devstack-network" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-white mb-4">Realization of the network infrastructure on the basis of the file network.tf</h2>
+
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Router must exist in OpenStack before referencing it</span>
+                    </div>
+                </div>                
+
+                <pre class="overflow-x-auto text-sm mb-4"><code class="language-bash font-mono">data "openstack_networking_router_v2" "router" {
+    name = "router_0" # Attach the name of the router to be extracted
+}</code></pre>                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Network Creation</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_network_v2" "network" {
+    name           = "Network0" # Name of the network
+    admin_state_up = true # Administrative state (enabled/disabled)
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Subnet Configuration</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_subnet_v2" "subnet" {
+    name            = "Network0" # Name subnet
+    network_id      = openstack_networking_network_v2.network.id # ID network, before it was created
+    cidr            = "11.11.11.0/24" # Specify the entire subnet
+    ip_version      = 4 # Specify the version of the IP address
+    gateway_ip      = "11.11.11.1" # Specify the gateway
+    dns_nameservers = ["77.88.8.8"] # Specify the DNS server
+    enable_dhcp     = true # Enable DHCP (if not needed, you can remove)
+
+    allocation_pool { # Specify the address pool
+        start = "11.11.11.20"
+        end   = "11.11.11.100"
+    }
+}
+
+# Add to the router, whose ID we got earlier for access to the Internet.
+resource "openstack_networking_router_interface_v2" "router_interface" {
+    router_id = data.openstack_networking_router_v2.router.id # Get the ID of the router
+    subnet_id = openstack_networking_subnet_v2.subnet.id # Get the ID of the subnet
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-terminal"></i>
+                        <span>Check and "replan": <code>terraform validate</code> and <code>terraform plan</code></span>
+                    </div>
+                </div>      
+                
+                <div class="bg-base-200 rounded-box p-4 mb-6" >
+                    <h3 class="font-semibold text-lg mb-2">Ports and floating IPs</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">
+# Create port for instance:
+resource "openstack_networking_port_v2" "port_[machine_name]" {
+    name       = "[machine_name]" # Name port
+    network_id = openstack_networking_network_v2.network.id # Get the ID of the network
+
+    fixed_ip { # Specify the fixed IP
+        subnet_id = openstack_networking_subnet_v2.subnet.id
+        ip_address = "11.11.11.20" # Specify the IP
+    }
+}      
+
+
+# Create port for load balancer (only if necessary)
+resource "openstack_networking_port_v2" "port_loadbalancer" {
+    name        = "Load Balancer" # Name port
+    network_id  = openstack_networking_network_v2.network.id # Get the ID of the network
+
+    fixed_ip { # Specify the fixed IP
+        subnet_id = openstack_networking_subnet_v2.subnet.id
+        ip_address = "11.11.11.21" # Specify the IP
+    }
+}
+
+# Create floating IP for instance:
+resource "openstack_networking_floatingip_v2" "floatingip_[machine_name]" {
+    pool = "public" # Name of the pool
+}
+
+
+# Create association of port with floating IP:
+resource "openstack_networking_floatingip_associate_v2" "associate_[machine_name]" {
+    port_id         = openstack_networking_port_v2.port_[machine_name].id # Get the ID of the port
+    floatingip_id   = openstack_networking_floatingip_v2.floatingip_[machine_name].address # Get the floating IP
+}
+
+## If there are defined security groups and rules, we can integrate them for instances:
+resource "openstack_networking_port_secgroup_associate_v2" "security_group_associate_[machine_name]" {
+    port_id             = openstack_networking_port_v2.port_[machine_name].id # Get the ID of the port
+    enforce             = true # Enable integration
+    securiry_group_ids  = [
+        ## You can specify any security groups, referring to their prepared resource and ID
+        openstack_networking_secgroup_v2.secgroup_1.id,
+        openstack_networking_secgroup_v2.secgroup_2.id
+    ]
+}
+                    </code></pre>
+
+                    <div class="alert alert-info shadow-lg mb-4">
+                        <div>
+                            <i class="fas fa-terminal"></i>
+                            <span>You can view the name of the public network using the OpenStack-Client</span>
+                            <code>openstack --insecure network list</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="devstack-security" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Realization of network security infrastructure on the basis of the file security.tf</h2>
+
+                <div class="alert alert-warning shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span><strong>Security Notice:</strong> Rules with 0.0.0.0/0 allow global access. Restrict IP ranges where possible.</span>
+                    </div>
+                </div>
+                
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-user-lock"></i> Security Groups</h3>
+                    
+                    <!-- ICMP Group -->
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-400 mb-2">ICMP Group (Ping)</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_1" {
+    name        = "ICMP" # Name of the group
+    description = "Allow ICMP (ping) traffic" # Description of the group
+}</code></pre>
+                    </div>
+            
+                    <!-- SSH Group -->
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-400 mb-2">SSH Group</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_2" {
+    name        = "SSH" # Name of the group
+    description = "Allow SSH access" # Description of the group
+}</code></pre>
+                    </div>                
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-400 mb-2">HTTP/HTTPS Group</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_3" {
+    name        = "HTTP/HTTPS" # Name of the group
+    description = "Allow web traffic" # Description of the group
+}</code></pre>
+                    </div>
+            
+                    <!-- VPN Group -->
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">VPN Group (WireGuard)</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_4" {
+    name        = "VPN" # Name of the group
+    description = "Allow VPN (WireGuard) traffic" # Description of the group
+}</code></pre>
+                    </div>
+                </div>           
+                
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-list-check"></i> Security Rules</h3>
+                    
+                    <!-- ICMP Rule -->
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-400 mb-2">ICMP Rule</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_icmp" {
+    direction         = "ingress" # Direction
+    ethertype         = "IPv4" # Type of version Internet Protocol
+    protocol          = "icmp" # Protocol
+    remote_ip_prefix  = "0.0.0.0/0" # Prefix of IP address
+    security_group_id = openstack_networking_secgroup_v2.secgroup_1.id # Get the ID of the group
+}</code></pre>
+                    </div>
+            
+                    <!-- SSH Rule -->
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-400 mb-2">SSH Rule</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_ssh" {
+    direction         = "ingress" # Direction
+    ethertype         = "IPv4" Type of version Internet Protocol
+    protocol          = "tcp" # Protocol
+    port_range_min    = 22 # Start of the port range
+    port_range_max    = 22 # End of the port range
+    remote_ip_prefix  = "0.0.0.0/0" # Prefix of IP address
+    security_group_id = openstack_networking_secgroup_v2.secgroup_2.id # Get the ID of the group
+}</code></pre>
+                    </div>
+            
+                    <!-- Web Rules -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h4 class="font-medium text-gray-400 mb-2">HTTP Rule</h4>
+                            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_http" {
+    direction         = "ingress" # Direction
+    ethertype         = "IPv4" Type of version Internet Protocol
+    protocol          = "tcp" # Protocol
+    port_range_min    = 80 # Start of the port range
+    port_range_max    = 80 # End of the port range
+    remote_ip_prefix  = "0.0.0.0/0" # Prefix of IP address
+    security_group_id = openstack_networking_secgroup_v2.secgroup_3.id # Get the ID of the group
+}</code></pre>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-400 mb-2">HTTPS Rule</h4>
+                            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_https" {
+    direction         = "ingress" # Direction
+    ethertype         = "IPv4" Type of version Internet Protocol
+    protocol          = "tcp" # Protocol
+    port_range_min    = 443 # Start of the port range
+    port_range_max    = 443 # End of the port range
+    remote_ip_prefix  = "0.0.0.0/0" # Prefix of IP address
+    security_group_id = openstack_networking_secgroup_v2.secgroup_3.id # Get the ID of the group
+}</code></pre>
+                        </div>
+                    </div>
+            
+                    <!-- VPN Rule -->
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">VPN Rule (WireGuard)</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_vpn" {
+    direction         = "ingress" # Direction
+    ethertype         = "IPv4" Type of version Internet Protocol
+    protocol          = "udp" # Protocol
+    port_range_min    = 51820 # Start of the port range
+    port_range_max    = 51820 # End of the port range
+    remote_ip_prefix  = "0.0.0.0/0" # Prefix of IP address
+    security_group_id = openstack_networking_secgroup_v2.secgroup_4.id # Get the ID of the group
+}</code></pre>
+                    </div>
+                </div>
+            
+                <!-- Implementation Notes -->
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-lightbulb"></i>
+                        <span><strong>Pro Tip:</strong> Combine related rules into single security groups (e.g., web-server group with HTTP/HTTPS rules) for better management.</span>
+                    </div>
+                </div>                
+            </section>
+
+            <section id="devstack-instance" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Creating infrastructure instances based on the instance.tf file</h2>
+
+                <!-- Instance Management Note -->
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><strong>Tip:</strong> Instance IDs can be retrieved using <code>openstack --insecure server list</code></span>
+                    </div>
+                </div>
+
+                <!-- 1. Interface Attachment -->
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> Network Interface Attachment</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Attach additional interface to management instance
+resource "openstack_compute_interface_attach_v2" "mgmt_interface" {
+    instance_id = "INSTANCE_ID" # Replace with actual instance ID
+    network_id  = openstack_networking_network_v2.network.id
+    fixed_ip    = "11.11.11.30" # Static IP assignment
+    depends_on  = [openstack_networking_subnet_v2.subnet] # Explicit dependency
+}</code></pre>
+                </div>         
+                
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cube"></i> Virtual Machine Instance</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Basic Configuration -->
+                        <div>
+                            <h4 class="font-medium text-gray-400 mb-2">Core Configuration</h4>
+                            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_compute_instance_v2" "web_server" {
+name        = "[name_machine]" # Instance name
+flavor_id   = var.flavor_id   # ID of the instance type (Specified in the variables, description in the 4th section. But you can take it directly from the ID)
+key_pair    = var.key_pair    # Key name (Specified in the variables, description in the 4th section. But you can take it directly from the ID)
+
+# OPTIONAL! This is the indication of a special file for automatic configuration of the cloud machine. An example of it will also be provided.
+# Cloud-init configuration
+user_data   = file("cloud-init.yml")</code></pre>
+                        </div>
+                        
+                        <!-- Storage Configuration -->
+                        <div>
+                            <h4 class="font-medium text-gray-400 mb-2">Storage Settings</h4>
+                            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">block_device {
+    uuid                  = var.image_id # ID of the image (Specified in the variables, description in the 4th section. But you can take it directly from the ID)
+    source_type           = "image" # Type of source (either image or volume)
+    volume_size           = 10      # Disk size (in GB)
+    boot_index            = 0 # Order number of the disk
+    destination_type      = "volume" # Type of destination
+    delete_on_termination = true # Deletion of the disk when the instance is destroyed
+}</code></pre>
+                        </div>
+
+                        <!-- Networking -->
+                        <div class="mt-4">
+                            <h4 class="font-medium text-gray-400 mb-2">Network Attachment</h4>
+                            <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">network {
+        port = openstack_networking_port_v2.port_[machine_name].id
+    }
+}</code></pre>
+                        </div>
+                    </div>                        
+                </div>        
+                <!-- Important Notes -->
+                <div class="alert alert-warning shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <p><strong>Important Configuration Notes:</strong></p>
+                            <ul class="list-disc pl-5">
+                                <li>All <code>[]</code> placeholders must be replaced with actual values</li>
+                                <li><code>depends_on</code> ensures proper creation order</li>
+                                <li>Set <code>delete_on_termination</code> to false for persistent storage</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>                        
+            </section>
+            
+            <section id="devstack-variables" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Editing special variables.tf (optional)</h2>
+                <p class="text-gray-300 mb-2">Opening the file that was specified at the very beginning of the initialization (variables.tf), modifying it for rational use of variables inside other configuration files.</p>
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2">Configuration variables</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">variable "image_id" { # ID of the image
+    type    = string # Type of the variable
+    default = "[Target ID]" # Key/ID of the image
+}
+
+variable "flavor_id" { # ID of the instance type
+    type    = string # Type of the variable
+    default = "[Target ID]" # Key/ID of the instance type
+}
+
+variable "key_pair" { # Name of the key
+    type    = string # Type of the variable
+    default = "[Target key name]" # Key/Name of the key
+}</code></pre>
+                </div>
+
+                <div class="alert alert-info shadow-lg mb-6">
+                    <div>
+                        <i class="fas fa-terminal"></i>
+                        <span>Getting Image ID: <code>openstack --insecure image list</code></span>
+                    </div>
+                </div>
+                <div class="alert alert-info shadow-lg mb-6">
+                    <div>
+                        <i class="fas fa-terminal"></i>
+                        <span>Getting Flavor ID: <code>openstack --insecure flavor list</code></span>
+                    </div>
+                </div>                
+            </section>
+
+            <section id="devstack-cloudinit" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Creating a special file for automatic configuration of the cloud machine</h2>
+                <p class="text-gray-300 mb-2">Creating a special file cloud-init.yml, which will be executed and automatically configure the instance with the necessary parameters.</p>
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><strong>Tip:</strong>This file is not required, but this file complete infrastructure must fast.</code></span>
+                    </div>
+                </div>                
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2">Cloud-init.yml file.</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Creating a special file cloud-init.yml
+# For automatic configuration of the instance at its launch
+
+#cloud-config
+  chpasswd: # password change
+    expire: false # disable automatic password change
+    users: # list of users
+    - {name: [USERNAME], password: [PASSWORD], type: text}
+    ssh_pwauth: false # SSH password support
+    
+  users: # creating users
+    - name: [USERNAME]
+      sudo: ALL=(ALL) NOPASSWD: ALL # Granting admin privileges (MAY NOT BE ASSIGNED! Depends on the necessity)
+      groups: wheel # Adding the user to the wheel group (MAY NOT BE ASSIGNED! Depends on the necessity)
+      shell: /bin/bash # Specifying the command shell 
+      ssh_authorized_keys:
+        - [SSH-KEY] # It is recommended to take it on the machine that is the controller for the instances. Another key is not provided for security reasons.</code></pre>
+                </div>
+            </section>
+
+            <section id="devstack-loadbalancer" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Implementation of the load balancer (optional)</h2>
+                <p class="text-gray-300 mb-2">Implementation of the load balancer is only required when server resources are limited and it is necessary to distribute the load between them horizontally and vertically.</p>
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Anywhere, IFS recommended use loadbalancer, because network is not easy structure.</span>
+                        <span>But, LoadBalancer is not required.</span>
+                    </div>
+                </div>
+
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2">LoadBalancer Configuration</h3>
+                </div>
+            </section>
+
+            <section id="devstack-output" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Implementation of the debug file output.tf (optional)</h2>
+            </section>          
+            
+            <section id="devstack-templates" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Implementation of the auxiliary file templates.tf</h2>
+            </section>         
+            
+            <section id="devstack-cloudinit" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-while mb-4">Formation of automatic configuration</h2>
+            </section>            
+        </section>
+    </div>
+</div>
+{% endblock %}

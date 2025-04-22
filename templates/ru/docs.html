@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-white mb-4">Системная документация</h1>
+        <p class="text-gray-300">Полные руководства по системному администрированию и настройке сетей</p>
+    </div>
+
+    <!-- Навигационные кнопки -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+        <a href="/ru/docs/alt-linux" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fab fa-linux"></i> Alt Linux
+        </a>
+        <a href="/ru/docs/cisco" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-network-wired"></i> Cisco PT
+        </a>
+        <a href="/ru/docs/firewall" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-fire"></i> Межсетевой экран
+        </a>
+        <a href="/ru/docs/cyberbackup" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-database"></i> Cyber Backup
+        </a>
+        <a href="/ru/docs/terraform" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-cloud"></i> Terraform
+        </a>
+        <a href="/ru/docs/not-planed" class="btn btn-outline hover:bg-blue-600 gap-2">
+            <i class="fas fa-info-circle"></i> Не запланировано
+        </a>
+    </div>
+
+    <!-- Быстрые ссылки -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-4">Популярные руководства</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="/ru/docs/alt-linux#networking" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-ethernet mr-2"></i> Настройка сети в Alt Linux
+            </a>
+            <a href="/ru/docs/cisco#cpt-ospf" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-route mr-2"></i> Настройка OSPF в Cisco
+            </a>
+            <a href="/ru/docs/terraform#devstack" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-server mr-2"></i> Инфраструктура в Terraform
+            </a>
+            <a href="/ru/docs/cyberbackup#setup" class="hover:text-blue-400 text-gray-300">
+                <i class="fas fa-hdd mr-2"></i> Инициализация Cyber Backup
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Cisco PT Docs - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-network-wired text-blue-400 mr-2"></i>Cisco PT Documentation
+        </h1>
+        <strong class="text-gray-300">This section contains information about Cisco Packet Tracer (hereinafter referred to as CPT).</strong>
+        <p class="text-gray-300">The section contains information about the CPT environment, its settings, and how to use it.</p>
+        <div class="divider"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#cpt-basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Basic Setup</a>
+        <a href="#cpt-addressing" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>Addressing</a>
+        <a href="#cpt-provider" class="btn btn-sm"><i class="fa-solid fa-ethernet"></i>Provider Connection</a>
+        <a href="#cpt-nat" class="btn btn-sm"><i class="fa-solid fa-hexagon-nodes"></i>NAT Addressing</a>
+        <a href="#cpt-dhcp" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>DHCP Server</a>
+        <a href="#cpt-tunnel" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>IP Tunnel</a>
+        <a href="#cpt-ospf" class="btn btn-sm"><i class="fa-solid fa-route"></i>OSPF</a>
+    </div>
+
+    <div class="space-y-12">
+        <section id="cpt-basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-gear"></i> Basic Router Configuration</h2>
+            <p class="text-gray-300 mb-2">Essential setup for CPT switches and routers.</p>
+        
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-terminal"></i>
+                    <span>All commands require privileged mode access (<code>en</code>)</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-signature"></i> Device Identification</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">enable
+configure terminal
+hostname ROUTER01
+ip domain-name example.com</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-globe"></i> DNS Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip name-server 8.8.8.8
+ip name-server 8.8.4.4
+ip domain-name example.com
+write</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-clock"></i> NTP Setup</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ntp server pool.ntp.org
+ntp timezone UTC+3
+write</code></pre>
+            </div>
+        </section>      
+        <section id="cpt-addressing" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-map-marked-alt"></i> Interface Addressing</h2>
+            <p class="text-gray-300 mb-2">Configuring ports and VLAN interfaces.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-eye"></i> Port Inspection</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">show port brief</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> VLAN Interface</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+[Interface name]/[VLAN ID] 
+desc "[Description/Purpose]"
+ip address [Address]/[Bitmask] # We specify the first address, which will be the gateway in the future with your settings already on the systems. 
+
+port te[N] # switching to the desired port, which will look towards the rest of the devices
+service-instance te[N]/[INTERFACE] # creating a service instance based on port -> interface
+encapsulation dot1q [VLAN] exact # setting the encapsulation taking into account if it is VLAN
+rewrite pop 1 # overwriting interface settings
+connect ip interface [INT-VLAN] # attaching the assigned IP on the interface to the service instance</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-ethernet"></i> Physical Interface</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface [INT] # switch to interface configuration
+desc "[Description/Purpose]" # purpose of description
+ip address [Address]/[Bitmask] # IP address assignment 
+
+port te[N] # switching to
+service-instance port te[N]/[INT] # switching to the service instance 
+encapsulation untagged # creating an untagged encapsulation
+connect ip interface [INT] # attaching an IP interface to a service instance
+write # write to the configuration file</code></pre>
+            </div>
+        </section>      
+        
+        <section id="cpt-provider" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-tower-cell"></i> ISP Connection Setup</h2>
+            <p class="text-gray-300 mb-2">Configuring WAN interface and default route.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-plug"></i> Interface Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t                       
+int [NAME] # switching to the interface
+ip address [IP]/[Mask] interface # assigning an address towards the provider
+exit # exit the interface
+
+port te[N] # specify the port number facing the provider
+service-instance te[N]/[INT] # specify the port number facing the provider and specify the interface made. Thus, we create a service instance. 
+encapsulation untagged # we make an untagged encapsulation
+connect ip interface [INT] # we assign an IP connection and specify the name of the interface to be created
+write</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-route"></i> Default Route</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip route 0.0.0.0/0 [IP-Gateway-R] # see point 1
+write</code></pre>
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><code>show ip route static</code> - viewing routes on the router</span>
+                    </div>
+                </div>
+                <div class="alert alert-warning shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Use ISP gateway IP (203.0.113.1 in example) as default route</span>
+                    </div>
+                </div>
+            </div>
+        </section>     
+        <section id="cpt-nat" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-arrows-rotate"></i> NAT Configuration</h2>
+            <p class="text-gray-300 mb-2">Network Address Translation for internet access.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-exchange-alt"></i> Interface Roles</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface [INT] # switching to interface configuration
+ip nat [OUTSIDE/INSIDE] 
+
+ip nat pool [NAME] [IPFirst]-[IP-End] # Creating a pool
+ip nat source dynamic inside pool [NAME] overload [IP address R] # see point 1</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><strong>Point 1:</strong> Where the IP address is R, specify the IP address from the provider given to the router.</span>
+                        <span>Specify outside - if you need to take packets from there, most often there is a network (provider).</span>
+                        <span>Specify inside - if we send packages, the rest of the devices are there.</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-database"></i> NAT Pool</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip nat pool PUBLIC_POOL 203.0.113.2 203.0.113.5 netmask 255.255.255.252
+ip nat source dynamic inside pool PUBLIC_POOL overload
+write</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Use ISP-provided IP range for NAT pool</span>
+                    </div>
+                </div>
+            </div>
+        </section>    
+        <section id="cpt-dhcp" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-dharmachakra"></i> DHCP Server</h2>
+            <p class="text-gray-300 mb-2">Automatic IP address assignment for clients.</p>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-address-book"></i> DHCP Pool</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip pool configuration mode [NAME] [IPFirst]-[IP-End] # Creating a pool of addresses
+dhcp server 1 # switching to the configuration mode for the DHCP
+pool [NAME] 1 # assigning a pool of addresses
+mask [MASK in Bit] # assign a bit mask
+gateway [IP-Gateway] # we assign
+dns gateway [IP],[OR ANY IP] # we specify the DNS server that the pool accesses
+domain-name [DOMAIN] # assign the domain
+end # exit the configuration mode
+        
+interface [INT] # switching
+dhcp server 1 interface # enabling the DHCP server on the interface
+exit # exit the interface
+write # configuration entry</code></pre>
+            </div>
+        </section>     
+        <section id="cpt-tunnel" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-filter"></i> GRE Tunnel</h2>
+            <p class="text-gray-300 mb-2">Secure connection between routers through ISP.</p>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-link"></i> Tunnel Configuration</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface tunnel.0 # switching to
+desc "[Description/Purpose]" # purpose
+ip address add [IP]/[MASK] # assign an IP address
+ip mtu [MTU] # assign the MTU
+ip tunnel [IP from Provider] [IP Second Router from Provider] mode gre # Assigning a tunnel between the routers
+end # complete the full configuration and exit configuration mode
+write # configuration entry
+# where the IP addresses are specified, the IP addresses of the routers facing the provider are indicated there</code></pre>
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Tunnel traffic bypasses ISP inspection (encrypted)</span>
+                    </div>
+                </div>
+            </div>
+        </section>        
+        <section id="cpt-ospf" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-project-diagram"></i> OSPF Routing</h2>
+            <p class="text-gray-300 mb-2">Dynamic routing protocol configuration.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sitemap"></i> Basic OSPF</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+router ospf 1 # switching to OSPF configuration mode
+ospf router-id [Personal IP from Router] # assigning the router ID
+passive-interface default # assigning the default interface
+network [IP] [Hosts] area 0 # network assignment
+no passive-interface tunnel.0 # turn off the passive mode on the tunnel. IF IT IS CONFIGURED! If not configured, you do not need
+no passive-interface [ANY-INTERFACE] # turn off the passive mode on ANYWAY interface. See tip.
+end # complete the full configuration and exit configuration mode
+write # configuration entry
+
+# Example of specifying a network:
+network 192.168.1.0 0.0.0.255 area 0
+
+</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Configuration <code>no passive-interface</code> need for interface, where passive mode not required. Example: NGFW</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-lock"></i> OSPF Authentication</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface tunnel0
+ip ospf auth message-digest # switching to the ip password protection mode
+ip ospf message-digest-key 1 md5 [ANY PASS] # assigning a password with an MD5 hash 
+end # complete the full configuration and exit configuration mode
+write # configuration entry</code></pre>
+            </div>
+        </section>                  
+    </div>
+</div>
+{% endblock %}

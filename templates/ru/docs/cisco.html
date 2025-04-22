@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Cisco PT документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-network-wired text-blue-400 mr-2"></i>Документация по Cisco Packet Tracer
+        </h1>
+        <strong class="text-gray-300">Данный раздел содержит информацию о Cisco Packet Tracer (далее CPT).</strong>
+        <p class="text-gray-300">Раздел содержит информацию о среде CPT, ее настройках и способах ее использования.</p>
+        <div class="divider"></div>        
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#cpt-basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Базовые настройки</a>
+        <a href="#cpt-addressing" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>Адресация</a>
+        <a href="#cpt-provider" class="btn btn-sm"><i class="fa-solid fa-ethernet"></i>Подключение к провайдеру</a>
+        <a href="#cpt-nat" class="btn btn-sm"><i class="fa-solid fa-hexagon-nodes"></i>NAT адресация</a>
+        <a href="#cpt-dhcp" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>DHCP сервер</a>
+        <a href="#cpt-tunnel" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>IP туннель</a>
+        <a href="#cpt-ospf" class="btn btn-sm"><i class="fa-solid fa-route"></i>OSPF</a>
+    </div>    
+
+    <div class="space-y-12">
+        <section id="cpt-basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-gear"></i> Базовая настройка роутера</h2>
+            <p class="text-gray-300 mb-2">Основные параметры для коммутаторов и маршрутизаторов CPT.</p>
+        
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-terminal"></i>
+                    <span>Все команды требуют привилегированного режима (<code>en</code>)</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-signature"></i> Идентификация устройства</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">enable
+configure terminal
+hostname ROUTER01
+ip domain-name example.com</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-globe"></i> Настройка DNS</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip name-server 8.8.8.8
+ip name-server 8.8.4.4
+ip domain-name example.com
+write</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-clock"></i> Настройка NTP</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ntp server pool.ntp.org
+ntp timezone UTC+3
+write</code></pre>
+            </div>
+        </section>      
+
+        <section id="cpt-addressing" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-map-marked-alt"></i> Настройка интерфейсов</h2>
+            <p class="text-gray-300 mb-2">Конфигурация портов и VLAN интерфейсов.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-eye"></i> Просмотр портов</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">show port brief</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> VLAN интерфейс</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+[Interface name]/[VLAN ID] 
+desc "[Description/Purpose]"
+ip address [Address]/[Bitmask] # Указываем первый адрес, который будет шлюзом
+
+port te[N] # Переходим на нужный порт
+service-instance te[N]/[INTERFACE] # Создаем сервисную инстанцию
+encapsulation dot1q [VLAN] exact # Настраиваем инкапсуляцию VLAN
+rewrite pop 1 # Перезаписываем настройки интерфейса
+connect ip interface [INT-VLAN] # Привязываем IP к интерфейсу</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-ethernet"></i> Физический интерфейс</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface [INT] # Переходим в режим настройки интерфейса
+desc "[Description/Purpose]" # Описание назначения
+ip address [Address]/[Bitmask] # Назначение IP-адреса
+
+port te[N] # Переходим на порт
+service-instance te[N]/[INT] # Переходим в сервисную инстанцию 
+encapsulation untagged # Создаем untagged инкапсуляцию
+connect ip interface [INT] # Привязываем IP интерфейс
+write # Сохраняем конфигурацию</code></pre>
+            </div>
+        </section>      
+
+        <section id="cpt-provider" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-tower-cell"></i> Подключение к провайдеру</h2>
+            <p class="text-gray-300 mb-2">Настройка WAN интерфейса и маршрута по умолчанию.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-plug"></i> Настройка интерфейса</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t                       
+int [NAME] # Переходим на интерфейс
+ip address [IP]/[Mask] # Назначаем адрес в сторону провайдера
+exit # Выходим из интерфейса
+
+port te[N] # Указываем порт подключения к провайдеру
+service-instance te[N]/[INT] # Создаем сервисную инстанцию
+encapsulation untagged # Настраиваем untagged инкапсуляцию
+connect ip interface [INT] # Привязываем IP соединение
+write</code></pre>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-route"></i> Маршрут по умолчанию</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip route 0.0.0.0/0 [IP-Gateway-R] # См. примечание 1
+write</code></pre>
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><code>show ip route static</code> - просмотр статических маршрутов</span>
+                    </div>
+                </div>
+                <div class="alert alert-warning shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Используйте IP-адрес шлюза провайдера (например 203.0.113.1) как маршрут по умолчанию</span>
+                    </div>
+                </div>
+            </div>
+        </section>   
+        <section id="cpt-nat" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-arrows-rotate"></i> Настройка NAT</h2>
+            <p class="text-gray-300 mb-2">Трансляция сетевых адресов для доступа в интернет.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-exchange-alt"></i> Роли интерфейсов</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface [INT] # переходим в режим настройки интерфейса
+ip nat [OUTSIDE/INSIDE] 
+
+ip nat pool [NAME] [IPFirst]-[IP-End] # создаем пул адресов
+ip nat source dynamic inside pool [NAME] overload [IP address R] # см. примечание 1</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span><strong>Примечание 1:</strong> Укажите внешний IP-адрес, выданный провайдером для роутера.</span>
+                        <span>Укажите outside - для интерфейса, принимающего пакеты (обычно подключение к провайдеру).</span>
+                        <span>Укажите inside - для интерфейса, отправляющего пакеты (локальные устройства).</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-database"></i> Пул NAT</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip nat pool [NAME] [IPFirst]-[IP-End] # Создаем пул адресов
+ip nat source dynamic inside pool [NAME] overload [IP-адрес Provider to Router]
+write</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Используйте диапазон IP-адресов, предоставленный провайдером</span>
+                    </div>
+                </div>
+            </div>
+        </section>    
+        
+        <section id="cpt-dhcp" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-dharmachakra"></i> DHCP Сервер</h2>
+            <p class="text-gray-300 mb-2">Автоматическое назначение IP-адресов клиентам.</p>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-address-book"></i> Пул DHCP</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+ip pool configuration mode [NAME] [IPFirst]-[IP-End] # создаем пул адресов
+dhcp server 1 # переходим в режим настройки DHCP
+pool [NAME] 1 # назначаем пул адресов
+mask [MASK in Bit] # указываем битовую маску
+gateway [IP-Gateway] # назначаем шлюз
+dns gateway [IP],[OR ANY IP] # указываем DNS-сервер
+domain-name [DOMAIN] # указываем домен
+end # выходим из режима конфигурации
+
+interface [INT] # переходим на интерфейс
+dhcp server 1 # включаем DHCP сервер на интерфейсе
+exit # выходим из интерфейса
+write # сохраняем конфигурацию</code></pre>
+            </div>
+        </section>     
+        
+        <section id="cpt-tunnel" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-filter"></i> GRE Туннель</h2>
+            <p class="text-gray-300 mb-2">Защищенное соединение между роутерами через провайдера.</p>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-link"></i> Настройка туннеля</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface tunnel.0 # переходим в режим туннеля
+desc "[Description/Purpose]" # описание назначения
+ip address add [IP]/[MASK] # назначаем IP-адрес
+ip mtu [MTU] # устанавливаем MTU
+ip tunnel [IP from Provider] [IP Second Router from Provider] mode gre # создаем туннель между роутерами
+end # завершаем настройку
+write # сохраняем конфигурацию
+# укажите IP-адреса роутеров со стороны провайдера</code></pre>
+                <div class="alert alert-success shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Трафик туннеля не проверяется провайдером (шифруется)</span>
+                    </div>
+                </div>
+            </div>
+        </section>        
+        
+        <section id="cpt-ospf" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-project-diagram"></i> OSPF Маршрутизация</h2>
+            <p class="text-gray-300 mb-2">Настройка динамического протокола маршрутизации.</p>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-sitemap"></i> Базовая настройка OSPF</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+router ospf 1 # переходим в режим OSPF
+ospf router-id [Personal IP from Router] # назначаем ID роутера
+passive-interface default # включаем пассивный режим по умолчанию
+network [IP] [Hosts] area 0 # добавляем сеть в зону 0
+no passive-interface tunnel.0 # отключаем пассивный режим для туннеля (если настроен)
+no passive-interface [ANY-INTERFACE] # отключаем пассивный режим для указанного интерфейса
+end # завершаем настройку
+write # сохраняем конфигурацию
+
+# Пример добавления сети:
+network 192.168.1.0 0.0.0.255 area 0</code></pre>
+                <div class="alert alert-info shadow-lg mt-4">
+                    <div>
+                        <i class="fas fa-info-circle"></i>
+                        <span>Команда <code>no passive-interface</code> нужна для интерфейсов, где пассивный режим не требуется (например NGFW)</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-lock"></i> Аутентификация OSPF</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">conf t
+interface tunnel.0
+ip ospf auth message-digest # включаем аутентификацию
+ip ospf message-digest-key 1 md5 [ANY PASS] # задаем пароль с хешем MD5 
+end # завершаем настройку
+write # сохраняем конфигурацию</code></pre>
+            </div>
+        </section>             
+    </div>
+</div>
+{% endblock %}

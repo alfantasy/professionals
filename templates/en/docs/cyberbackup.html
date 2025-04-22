@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}CyberBackup Docs - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-network-wired text-blue-400 mr-2"></i>CyberBackup Documentation
+        </h1>
+        <strong class="text-gray-300">This section contains information about CyberBackup.</strong>
+        <p class="text-gray-300">The section contains information about the CyberBackup environment, its settings, and how to use it.</p>
+        <p class="text-gray-300">Cyberbackup - is a cloud backup service.</p>
+        <div class="divider"></div>
+    </div>
+
+        <div class="flex flex-wrap gap-2 mb-8">
+            <a href="#setup" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Basic Setup</a>
+        </div>
+
+        <div class="space-y-12">
+            <section id="setup" class="scroll-mt-20">
+                <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-database"></i> Cyber Backup Configuration</h2>
+                <p class="text-gray-300 mb-2">Enterprise-grade backup solution with centralized management.</p>
+            
+                <div class="alert alert-warning shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Requires kernel sources matching your system version</span>
+                    </div>
+                </div>
+            
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Prerequisites Installation</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Check system info
+hostnamectl -f
+
+# Install dependencies
+apt-get install kernel-source-$(uname -r) kernel-headers-modules-std-def gcc make -y</code></pre>
+                </div>
+            
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-server"></i> Management Server Setup</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Install CyberBackup
+chmod +x CyberBackup_17_64-bit.x86_64
+sudo ./CyberBackup_17_64-bit.x86_64</code></pre>
+            
+                    <div class="mt-4">
+                        <h4 class="font-medium text-gray-400 mb-2">Installation Options</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li><strong>Components:</strong> Management Server</li>
+                            <li><strong>DBMS:</strong> SQLite</li>
+                            <li><strong>Web Server Port:</strong> 9877</li>
+                            <li><strong>TCP Ping-Pong Port:</strong> 7780</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-user-shield"></i> Admin Configuration</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Create privileged user
+useradd -m -s /bin/bash wsradmin
+echo "wsradmin:P@ssw0rd" | chpasswd</code></pre>
+            
+                    <div class="mt-4">
+                        <h4 class="font-medium text-gray-400 mb-2">Web Interface Access</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Configure in CyberBackup UI:
+1. Create Department "WSR"
+2. Add user "wsradmin" with password "P@ssw0rd"
+3. Grant full admin privileges
+
+# Enable web access
+echo "wsradmin" >> /etc/security/acronisagent.conf
+systemctl restart acronis_ams acronis_asm</code></pre>
+                    </div>
+                </div>
+            
+                <div class="bg-base-200 rounded-box p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-laptop"></i> Agent Deployment</h3>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># On client machines:
+sudo ./CyberBackup_17_64-bit.x86_64
+
+# Select:
+1. "Agent for Linux"
+2. Management Server: [SERVER_IP]
+3. Register with:
+    - Username: wsradmin
+    - Organization: wsr</code></pre>
+                </div>
+            
+                <div class="bg-base-200 rounded-box p-4">
+                    <h3 class="font-semibold text-lg mb-2"><i class="fas fa-hdd"></i> Storage Configuration</h3>
+                    <div class="alert alert-info shadow-lg mb-4">
+                        <div>
+                            <i class="fas fa-partition"></i>
+                            <span>Prepare backup storage partition using GParted before proceeding</span>
+                        </div>
+                    </div>
+            
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-400 mb-2">Web Interface Steps</h4>
+                            <ol class="list-decimal pl-5 text-gray-300 space-y-1">
+                                <li>Navigate to: Devices → Machines with agents</li>
+                                <li>Select target agent</li>
+                                <li>Choose "Security" tab</li>
+                                <li>Configure backup destination</li>
+                            </ol>
+                        </div>
+                        <div class="mockup-browser border bg-base-300">
+                            <div class="mockup-browser-toolbar">
+                                <div class="input">https://[SERVER_IP]:9877</div>
+                            </div>
+                            <div class="px-4 py-8 bg-base-200 text-center">
+                                <i class="fas fa-database text-4xl mb-2"></i>
+                                <p>Cyber Backup Storage Configuration</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+</div>
+{% endblock %}

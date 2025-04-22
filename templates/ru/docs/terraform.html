@@ -1,0 +1,948 @@
+{% extends "base.html" %}
+
+{% block title %}Инфраструктура с использованием Terraform | документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-cloud text-blue-400 mr-2"></i>Инфраструктура с использованием Terraform. Документация по Terraform
+        </h1>
+        <strong class="text-gray-300">Этот раздел содержит информацию об инфраструктуре Terraform.</strong>
+        <p class="text-gray-300">Раздел содержит информацию об инфраструктуре Terraform, ее настройках и использовании.</p>
+        <p class="text-gray-300">Инфраструктура Terraform - это облачная инфраструктурная услуга.</p>
+        <div class="divider"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#initialization" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Инициализация</a>
+        <a href="#devstack" class="btn btn-sm"><i class="fa-solid fa-cloud"></i>Инфраструктура на базе DevStack</a>
+    </div>
+
+    <div class="space-y-12">
+        <section id="initialization" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fas fa-cog mr-2"></i> Инициализация инфраструктуры Terraform</h2>
+            <p class="text-gray-300 mb-2">Начальная настройка инфраструктуры Terraform. Управление, конфигурация и развертывание.</p>
+            <p class="text-gray-300">Полные настройки в начальной конфигурации без примеров по умолчанию, это документация.</p>
+            
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-cloud"></i>
+                    <span>Требуется доступ к API-эндпоинтам облака OpenStack</span>
+                </div>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-download"></i> Установка</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Скачать и установить Terraform
+wget https://hashicorp-releases.yandexcloud.net/terraform/1.10.3/terraform_1.10.3_linux_amd64.zip
+unzip terraform_1.10.3_linux_amd64.zip -d /usr/local/bin
+        
+# Установить CLI-инструменты OpenStack
+apt-get install -y python3-openstackclient python3-pip
+        
+# Установить необходимые Python-модули
+pip3 install python-octaviaclient python-cinderclient python-novaclient</code></pre>
+            </div>            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cog"></i> Конфигурационные файлы</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">~/.terraformrc</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">provider_installation {
+    network_mirror {
+        url = "https://terraform-mirror.mcs.mail.ru"
+        include = ["registry.terraform.io/*/*"]
+    }
+    direct {
+        exclude = ["registry.terraform.io/*/*"]
+    }
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">terraform_cloud.conf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">export TF_VAR_OS_AUTH_URL=[API_URL]
+export TF_VAR_OS_PROJECT_NAME=[PROJECT]
+export TF_VAR_OS_USERNAME=[USERNAME]
+export TF_VAR_OS_PASSWORD=[PASSWORD]
+
+export OS_AUTH_URL=[API_URL]
+export OS_IDENTITY_API_VERSION=3
+export OS_AUTH_TYPE=Password
+export OS_PROJECT_DOMAIN_NAME=[DOMAIN]
+export OS_USER_DOMAIN_NAME=[DOMAIN]</code></pre>
+                    </div>
+                </div>    
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-plug"></i> Настройка провайдера</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">provider.tf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">terraform {
+    required_providers {
+        openstack = {
+            source = "terraform-provider-openstack/openstack"
+            version = "2.1.0"
+        }
+    }
+}
+        
+provider "openstack" {
+    auth_url    = var.OS_AUTH_URL
+    tenant_name = var.OS_PROJECT_NAME
+    user_name   = var.OS_USERNAME
+    password    = var.OS_PASSWORD
+    insecure    = true
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">variables.tf</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">variable "OS_AUTH_URL" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_PROJECT_NAME" {
+    type = string
+    sensitive = true
+}
+        
+variable "OS_USERNAME" {
+    type = string
+    sensitive = true
+}
+
+variable "OS_PASSWORD" {
+    type = string
+    sensitive = true
+}</code></pre>
+                    </div>
+                </div>
+            </div>     
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-play"></i> Инициализация</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Загрузить переменные окружения
+source terraform_cloud.conf
+        
+# Инициализировать Terraform
+terraform init</code></pre>
+                    </div>
+                    <div class="alert alert-success shadow-lg">
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Успешная инициализация отобразит сообщения об установке провайдеров</span>
+                        </div>
+                    </div>
+                </div>
+            </div>                           
+        </section>
+        <section id="devstack" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-cloud"></i> Инфраструктура на базе DevStack с использованием Terraform</h2>
+            <p class="text-gray-300">Здесь описаны все файлы для реализации инфраструктуры на базе DevStack с использованием Terraform.</p>
+            <p class="text-gray-300">Каждый файл является уникальным. Ниже есть кнопочки со всеми необходимыми файлами.</p>
+        </section>
+        <div class="flex flex-wrap gap-2 mb-2">
+            <a href="#devstack-network" class="btn btn-sm"><i class="fa-solid fa-network-wired"></i>network.tf</a>
+            <a href="#devstack-security" class="btn btn-sm"><i class="fa-solid fa-shield-halved"></i>security.tf</a>
+            <a href="#devstack-instance" class="btn btn-sm"><i class="fa-solid fa-laptop-code"></i>instance.tf</a>
+            <a href="#devstack-variables" class="btn btn-sm"><i class="fa-solid fa-list-check"></i>variables.tf</a>
+            <a href="#devstack-cloudinit" class="btn btn-sm"><i class="fa-solid fa-cloud-bolt"></i>cloud-init.yml</a>
+            <a href="#devstack-loadbalancer" class="btn btn-sm"><i class="fa-solid fa-scale-balanced"></i>loadbalancer.tf</a>
+            <a href="#devstack-output" class="btn btn-sm"><i class="fa-solid fa-spell-check"></i>output.tf</a>
+            <a href="#devstack-templates" class="btn btn-sm"><i class="fa-solid fa-message"></i>templates.tf</a>
+            <a href="#devstack-cloudinit-yml" class="btn btn-sm"><i class="fa-solid fa-wand-magic"></i>cloudinit.sh</a>
+        </div>        
+
+        <section id="devstack-network" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-network-wired"></i> Реализация сетевой инфраструктуры на основе файла network.tf</h2>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span>Роутер должен существовать в OpenStack до его использования</span>
+                </div>
+            </div>                
+
+            <pre class="overflow-x-auto text-sm mb-4"><code class="language-bash font-mono">data "openstack_networking_router_v2" "router" {
+    name = "router_0" # Укажите имя роутера для извлечения
+}</code></pre>                
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h4 class="font-medium text-gray-400 mb-2">Создание сети</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_network_v2" "network" {
+    name           = "Network0" # Имя сети
+    admin_state_up = true # Административное состояние (включено/выключено)
+}</code></pre>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-400 mb-2">Конфигурация подсети</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_subnet_v2" "subnet" {
+    name            = "Network0" # Имя подсети
+    network_id      = openstack_networking_network_v2.network.id # ID сети, созданной ранее
+    cidr            = "11.11.11.0/24" # Укажите всю подсеть
+    ip_version      = 4 # Версия IP-адреса
+    gateway_ip      = "11.11.11.1" # Укажите шлюз
+    dns_nameservers = ["77.88.8.8"] # Укажите DNS-сервер
+    enable_dhcp     = true # Включить DHCP (если не нужно, можно удалить)
+
+    allocation_pool { # Укажите пул адресов
+        start = "11.11.11.20"
+        end   = "11.11.11.100"
+    }
+}
+
+# Добавление к роутеру, ID которого мы получили ранее для доступа в интернет
+resource "openstack_networking_router_interface_v2" "router_interface" {
+    router_id = data.openstack_networking_router_v2.router.id # Получить ID роутера
+    subnet_id = openstack_networking_subnet_v2.subnet.id # Получить ID подсети
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-terminal"></i>
+                    <span>Проверка и "перепланирование": <code>terraform validate</code> и <code>terraform plan</code></span>
+                </div>
+            </div>      
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6" >
+                <h3 class="font-semibold text-lg mb-2">Порты и плавающие IP-адреса</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">
+# Создание порта для инстанса:
+resource "openstack_networking_port_v2" "port_[machine_name]" {
+    name       = "[machine_name]" # Имя порта
+    network_id = openstack_networking_network_v2.network.id # Получить ID сети
+
+    fixed_ip { # Укажите фиксированный IP-адрес
+        subnet_id = openstack_networking_subnet_v2.subnet.id
+        ip_address = "11.11.11.20" # Укажите IP-адрес
+    }
+}      
+
+# Создание порта для балансировщика нагрузки (только при необходимости)
+resource "openstack_networking_port_v2" "port_loadbalancer" {
+    name        = "Load Balancer" # Имя порта
+    network_id  = openstack_networking_network_v2.network.id # Получить ID сети
+
+    fixed_ip { # Укажите фиксированный IP-адрес
+        subnet_id = openstack_networking_subnet_v2.subnet.id
+        ip_address = "11.11.11.21" # Укажите IP-адрес
+    }
+}
+
+# Создание плавающего IP-адреса для инстанса:
+resource "openstack_networking_floatingip_v2" "floatingip_[machine_name]" {
+    pool = "public" # Имя пула
+}
+
+# Связывание порта с плавающим IP-адресом:
+resource "openstack_networking_floatingip_associate_v2" "associate_[machine_name]" {
+    port_id         = openstack_networking_port_v2.port_[machine_name].id # Получить ID порта
+    floatingip_id   = openstack_networking_floatingip_v2.floatingip_[machine_name].address # Получить плавающий IP
+}
+
+## Если определены группы безопасности и правила, их можно интегрировать для инстансов:
+resource "openstack_networking_port_secgroup_associate_v2" "security_group_associate_[machine_name]" {
+    port_id             = openstack_networking_port_v2.port_[machine_name].id # Получить ID порта
+    enforce             = true # Включить интеграцию
+    securiry_group_ids  = [
+        ## Можно указать любые группы безопасности, ссылаясь на их подготовленные ресурсы и ID
+        openstack_networking_secgroup_v2.secgroup_1.id,
+        openstack_networking_secgroup_v2.secgroup_2.id
+    ]
+}
+                </code></pre>
+
+                <div class="alert alert-info shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-terminal"></i>
+                        <span>Имя публичной сети можно посмотреть с помощью OpenStack-Client</span>
+                        <code>openstack --insecure network list</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="devstack-security" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-while mb-4"><i class="fa-solid fa-shield-halved"></i> Реализация инфраструктуры сетевой безопасности на основе файла security.tf</h2>
+        
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>Важно:</strong> Правила с 0.0.0.0/0 разрешают глобальный доступ. По возможности ограничивайте диапазоны IP-адресов.</span>
+                </div>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-user-lock"></i> Группы безопасности</h3>
+                
+                <!-- Группа ICMP -->
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Группа ICMP (Ping)</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_1" {
+    name        = "ICMP" # Название группы
+    description = "Разрешить ICMP (ping) трафик" # Описание группы
+}</code></pre>
+                </div>
+        
+                <!-- Группа SSH -->
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Группа SSH</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_2" {
+    name        = "SSH" # Название группы
+    description = "Разрешить SSH доступ" # Описание группы
+}</code></pre>
+                </div>                
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Группа HTTP/HTTPS</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_3" {
+    name        = "HTTP/HTTPS" # Название группы
+    description = "Разрешить веб-трафик" # Описание группы
+}</code></pre>
+                </div>
+        
+                <!-- Группа VPN -->
+                <div>
+                    <h4 class="font-medium text-gray-400 mb-2">Группа VPN (WireGuard)</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_v2" "secgroup_4" {
+    name        = "VPN" # Название группы
+    description = "Разрешить VPN (WireGuard) трафик" # Описание группы
+}</code></pre>
+                </div>
+            </div>           
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-list-check"></i> Правила безопасности</h3>
+                
+                <!-- Правило ICMP -->
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Правило ICMP</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_icmp" {
+    direction         = "ingress" # Направление
+    ethertype         = "IPv4" # Версия интернет-протокола
+    protocol          = "icmp" # Протокол
+    remote_ip_prefix  = "0.0.0.0/0" # Префикс IP-адреса
+    security_group_id = openstack_networking_secgroup_v2.secgroup_1.id # Получить ID группы
+}</code></pre>
+                </div>
+        
+                <!-- Правило SSH -->
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-400 mb-2">Правило SSH</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_ssh" {
+    direction         = "ingress" # Направление
+    ethertype         = "IPv4" # Версия интернет-протокола
+    protocol          = "tcp" # Протокол
+    port_range_min    = 22 # Начало диапазона портов
+    port_range_max    = 22 # Конец диапазона портов
+    remote_ip_prefix  = "0.0.0.0/0" # Префикс IP-адреса
+    security_group_id = openstack_networking_secgroup_v2.secgroup_2.id # Получить ID группы
+}</code></pre>
+                </div>
+        
+                <!-- Веб-правила -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Правило HTTP</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_http" {
+    direction         = "ingress" # Направление
+    ethertype         = "IPv4" # Версия интернет-протокола
+    protocol          = "tcp" # Протокол
+    port_range_min    = 80 # Начало диапазона портов
+    port_range_max    = 80 # Конец диапазона портов
+    remote_ip_prefix  = "0.0.0.0/0" # Префикс IP-адреса
+    security_group_id = openstack_networking_secgroup_v2.secgroup_3.id # Получить ID группы
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Правило HTTPS</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_https" {
+    direction         = "ingress" # Направление
+    ethertype         = "IPv4" # Версия интернет-протокола
+    protocol          = "tcp" # Протокол
+    port_range_min    = 443 # Начало диапазона портов
+    port_range_max    = 443 # Конец диапазона портов
+    remote_ip_prefix  = "0.0.0.0/0" # Префикс IP-адреса
+    security_group_id = openstack_networking_secgroup_v2.secgroup_3.id # Получить ID группы
+}</code></pre>
+                    </div>
+                </div>
+        
+                <!-- Правило VPN -->
+                <div>
+                    <h4 class="font-medium text-gray-400 mb-2">Правило VPN (WireGuard)</h4>
+                    <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_vpn" {
+    direction         = "ingress" # Направление
+    ethertype         = "IPv4" # Версия интернет-протокола
+    protocol          = "udp" # Протокол
+    port_range_min    = 51820 # Начало диапазона портов
+    port_range_max    = 51820 # Конец диапазона портов
+    remote_ip_prefix  = "0.0.0.0/0" # Префикс IP-адреса
+    security_group_id = openstack_networking_secgroup_v2.secgroup_4.id # Получить ID группы
+}</code></pre>
+                </div>
+            </div>
+        
+            <!-- Рекомендации по реализации -->
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-lightbulb"></i>
+                    <span><strong>Совет:</strong> Объединяйте связанные правила в единые группы безопасности (например, группа веб-сервера с правилами HTTP/HTTPS) для удобства управления.</span>
+                </div>
+            </div>                
+        </section>
+
+        <section id="devstack-instance" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-laptop-code"></i> Создание инстансов инфраструктуры на основе файла instance.tf</h2>
+        
+            <!-- Примечание об управлении инстансами -->
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Подсказка:</strong> ID инстансов можно получить с помощью <code>openstack --insecure server list</code></span>
+                </div>
+            </div>
+        
+            <!-- 1. Подключение интерфейса -->
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> Подключение сетевого интерфейса</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Подключение дополнительного интерфейса к управляющему инстансу
+resource "openstack_compute_interface_attach_v2" "mgmt_interface" {
+    instance_id = "INSTANCE_ID" # Замените на реальный ID инстанса
+    network_id  = openstack_networking_network_v2.network.id
+    fixed_ip    = "11.11.11.30" # Статическое назначение IP
+    depends_on  = [openstack_networking_subnet_v2.subnet] # Явная зависимость
+}</code></pre>
+            </div>         
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-cube"></i> Виртуальная машина</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Базовая конфигурация -->
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Основная конфигурация</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">resource "openstack_compute_instance_v2" "web_server" {
+name        = "[name_machine]" # Имя инстанса
+flavor_id   = var.flavor_id   # ID типа инстанса (Указано в переменных, описание в 4-й секции. Можно указать ID напрямую)
+key_pair    = var.key_pair    # Имя ключа (Указано в переменных, описание в 4-й секции. Можно указать ID напрямую)
+
+# ОПЦИОНАЛЬНО! Указание специального файла для автоматической настройки облачной машины. Пример будет приведен ниже.
+# Конфигурация cloud-init
+user_data   = file("cloud-init.yml")</code></pre>
+                    </div>
+                    
+                    <!-- Конфигурация хранилища -->
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Настройки хранилища</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">block_device {
+    uuid                  = var.image_id # ID образа (Указано в переменных, описание в 4-й секции. Можно указать ID напрямую)
+    source_type           = "image" # Тип источника (image или volume)
+    volume_size           = 10      # Размер диска (в GB)
+    boot_index            = 0 # Порядковый номер диска
+    destination_type      = "volume" # Тип назначения
+    delete_on_termination = true # Удаление диска при уничтожении инстанса
+}</code></pre>
+                    </div>
+        
+                    <!-- Сетевое подключение -->
+                    <div class="mt-4">
+                        <h4 class="font-medium text-gray-400 mb-2">Подключение к сети</h4>
+                        <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">network {
+        port = openstack_networking_port_v2.port_[machine_name].id
+    }
+}</code></pre>
+                    </div>
+                </div>                        
+            </div>        
+            <!-- Важные примечания -->
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <p><strong>Важные замечания по конфигурации:</strong></p>
+                        <ul class="list-disc pl-5">
+                            <li>Все заполнители <code>[]</code> должны быть заменены реальными значениями</li>
+                            <li><code>depends_on</code> обеспечивает правильный порядок создания</li>
+                            <li>Установите <code>delete_on_termination</code> в false для постоянного хранилища</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>                        
+        </section>
+
+        <section id="devstack-variables" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-list-check"></i> Редактирование специального variables.tf (опционально)</h2>
+            <p class="text-gray-300 mb-2">Открытие файла, указанного в начале инициализации (variables.tf), его модификация для рационального использования переменных в других конфигурационных файлах.</p>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Конфигурационные переменные</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono">variable "image_id" { # ID образа
+    type    = string # Тип переменной
+    default = "[Целевой ID]" # Ключ/ID образа
+}
+
+variable "flavor_id" { # ID типа инстанса
+    type    = string # Тип переменной
+    default = "[Целевой ID]" # Ключ/ID типа инстанса
+}
+
+variable "key_pair" { # Имя ключа
+    type    = string # Тип переменной
+    default = "[Целевое имя ключа]" # Ключ/Имя ключа
+}</code></pre>
+            </div>
+        
+            <div class="alert alert-info shadow-lg mb-6">
+                <div>
+                    <i class="fas fa-terminal"></i>
+                    <span>Получение ID образа: <code>openstack --insecure image list</code></span>
+                </div>
+            </div>
+            <div class="alert alert-info shadow-lg mb-6">
+                <div>
+                    <i class="fas fa-terminal"></i>
+                    <span>Получение ID типа инстанса: <code>openstack --insecure flavor list</code></span>
+                </div>
+            </div>                
+        </section>
+        
+        <section id="devstack-cloudinit" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-cloud-bolt"></i> Создание специального файла для автоматической настройки облачной машины</h2>
+            <p class="text-gray-300 mb-2">Создание специального файла cloud-init.yml, который будет выполнен и автоматически настроит инстанс с необходимыми параметрами.</p>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет:</strong> Этот файл не обязателен, но его использование значительно ускоряет развертывание инфраструктуры.</span>
+                </div>
+            </div>                
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Файл cloud-init.yml</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Создание специального файла cloud-init.yml
+# Для автоматической настройки инстанса при его запуске
+        
+#cloud-config
+  chpasswd: # смена пароля
+  expire: false # отключение автоматической смены пароля
+  users: # список пользователей
+  - {name: [ИМЯ_ПОЛЬЗОВАТЕЛЯ], password: [ПАРОЛЬ], type: text}
+  ssh_pwauth: false # поддержка пароля для SSH
+
+  users: # создание пользователей
+  - name: [ИМЯ_ПОЛЬЗОВАТЕЛЯ]
+    sudo: ALL=(ALL) NOPASSWD: ALL # Предоставление прав администратора (МОЖЕТ НЕ НАЗНАЧАТЬСЯ! Зависит от необходимости)
+    groups: wheel # Добавление пользователя в группу wheel (МОЖЕТ НЕ НАЗНАЧАТЬСЯ! Зависит от необходимости)
+    shell: /bin/bash # Указание командной оболочки 
+    ssh_authorized_keys:
+    - [SSH-КЛЮЧ] # Рекомендуется использовать ключ с машины, которая является контроллером для инстансов. Другой ключ не предоставляется по соображениям безопасности.</code></pre>
+            </div>
+        </section>
+        
+        <section id="devstack-loadbalancer" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fa-solid fa-scale-balanced"></i> Реализация балансировщика нагрузки (опционально)</h2>
+            <p class="text-gray-300 mb-2">Реализация балансировщика нагрузки требуется только при ограниченных ресурсах серверов и необходимости распределения нагрузки между ними как горизонтальным масштабированием, так и вертикальным.</p>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span>Тем не менее, рекомендуется использовать балансировщик нагрузки, так как сетевая структура не является простой.</span>
+                    <span>Однако балансировщик нагрузки не является обязательным.</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Конфигурация балансировщика нагрузки</h3>
+                <pre class="overflow-x-auto text-sm"><code class="language-bash font-mono"># Создание специального файла loadbalancer.tf          
+# Создаем балансировщик нагрузки с именем "Load Balancer"      
+resource "openstack_lb_loadbalancer_v2" "loadbalancer" {
+    name            = "Load Balancer"
+    vip_subnet_id   = openstack_networking_subnet_v2.subnet.id
+
+    depends_on = [
+        ## При необходимости указываем зависимости
+        openstack_networking_subnet_v2.subnet # Старт только после создания подсети
+        openstack_compute_instance_v2.[name_machine] # Старт только после создания инстанса
+    ]
+}</code></pre>               
+            </div>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет: </strong>Не забудьте указать правила и группы для балансировки.</span>
+                </div>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Конфигурация правил балансировщика нагрузки</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">## Реализация правил в балансировщике нагрузки (HTTP/HTTPS)
+resource "openstack_lb_listener_v2" "listener_http" {
+    loadbalancer_id = openstack_lb_loadbalancer_v2.loadbalancer.id # Ссылка на балансировщик
+    protocol        = "HTTP" # Протокол
+    protocol_port   = 80 # Порт
+    name            = "HTTP" # Имя
+}
+
+resource "openstack_lb_listener_v2" "listener_https" {
+    loadbalancer_id = openstack_lb_loadbalancer_v2.loadbalancer.id # Ссылка на балансировщик
+    protocol        = "HTTPS" # Протокол
+    protocol_port   = 443 # Порт
+    name            = "HTTPS" # Имя
+}
+
+# Можем создать группы для HTTP и HTTPS с указанием метода балансировки (ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP)
+resource "openstack_lb_pool_v2" "pool_http" {
+    listener_id     = openstack_lb_listener_v2.listener_http.id # Ссылка на прослушку
+    protocol        = "HTTP" # Протокол
+    lb_method       = "ROUND_ROBIN" # Метод балансировки
+    name            = "HTTP" # Имя
+}
+
+resource "openstack_lb_pool_v2" "pool_https" {
+    listener_id     = openstack_lb_listener_v2.listener_https.id # Ссылка на прослушку
+    protocol        = "HTTPS" # Протокол
+    lb_method       = "ROUND_ROBIN" # Метод балансировки
+    name            = "HTTPS" # Имя
+}</code>                
+                </pre>
+            </div>
+            
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Конфигурация инстансов в балансировщике нагрузки</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono"># Добавляем инстансы в балансировщик нагрузки
+resource "openstack_lb_member_v2" "member_http" {
+    name        = "[name_machine]" # Имя
+    subnet_id   = openstack_networking_subnet_v2.subnet.id # Подсеть
+    pool_id     = openstack_lb_pool_v2.pool_http.id # Пул
+    address     = "[ip_machine]" # Адрес инстанса
+    protocol_port = 80 # Порт
+}
+
+resource "openstack_lb_member_v2" "member_https" {
+    name        = "[name_machine]" # Имя
+    subnet_id   = openstack_networking_subnet_v2.subnet.id # Подсеть
+    pool_id     = openstack_lb_pool_v2.pool_https.id # Пул
+    address     = "[ip_machine]" # Адрес инстанса
+    protocol_port = 443 # Порт
+}</code>
+                </pre>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Реализация проверки доступности инстансов в группах</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">resource "openstack_lb_monitor_v2" "monitor_http" {
+    name        = "Monitor HTTP"
+    pool_id     = openstack_lb_pool_v2.pool_http.id # Пул
+    type        = "PING" # Тип
+    delay       = "10" # Задержка
+    timeout     = "4" # Таймаут
+    max_retries = "5" # Максимальное количество попыток
+}
+
+resource "openstack_lb_monitor_v2" "monitor_https" {
+    name        = "Monitor HTTPS"
+    pool_id     = openstack_lb_pool_v2.pool_https.id # Пул
+    type        = "PING" # Тип
+    delay       = "10" # Задержка
+    timeout     = "4" # Таймаут
+    max_retries = "5" # Максимальное количество попыток
+}</code>
+                </pre>
+            </div>
+        </section>
+
+        <section id="devstack-output" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-while mb-4"><i class="fa-solid fa-spell-check"></i> Реализация дебагг-файла output.tf (опционально)</h2>
+            <p class="text-gray-300 mb-2">В какой-то момент, у Вас может появится необходимость в реализации специального дебагг-файла, который будет позволять в быстром порядке прочитать данные с облачной инфраструктуры.</p>
+            <div class="alert alert-warning shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>Важно: </strong>Все добавленные значения - являются случайными и примерными.</span>
+                    <span>Не забывайте, это лишь особый дебагг-файл, имеющий свои параметры. Вы можете заполнять его своими данными.</span>
+                </div>
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Пример:</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">output "EXAMPLE" {
+    value = "[ANY]" # где ANY, можно написать любое значение, хоть параметр ресурса
+    depends_on = [ ##УКАЗАНИЕ АКТИВНОСТЕЙ## ] # Зависимость
+}
+
+# Полный пример:
+output "Instance0" {
+    value = openstack_networking_floatingip_v2.floatingip_instance.address
+    depends_on = [ openstack_compute_instance_v2.instance ]
+}</code>
+                </pre>
+            </div>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет: </strong>Указывайте в дебагг-файле только те значения, которые необходимо выводить.</span>
+                    <span>Кроме этого, данный файл можно использовать в скриптах автоматизации.</span>
+                </div>
+            </div>
+        </section>          
+        
+        <section id="devstack-templates" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-while mb-4"><i class="fa-solid fa-message"></i> Реализация вспомогательного файла templates.tf</h2>
+            <p class="text-gray-300 mb-2">Данный вспомогательный файл поможет в реализации различных конфигураций.</p>
+            <p class="text-gray-300 mb-2">В текущем примере, это генерация инвентаря Ansible с учетом примерной реализации инфраструктуры.</p>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span>Стоит учесть, что введенные здесь независимые переменные являются необязательными.</span>
+                    <span>Введенные здесь значения - являются лишь примером содержания вспомогательного файла, но его можно и не писать в случае преднастройки при помощи остальных файлов или настройке того же скрипта автоматизации.</span>
+                </div>
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Пример реализации templates.tf</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono"># Полностью реализуем систему данных, хранимых в инвентаре при их наличии и передачи их как аргументированных строк.
+data "template_file" "inventory" { # Указание данных в инвентаре Ansible
+    template = file("/home/[user]/[any_directory]/_templates/inventory.tpl") # указываем путь к генерируемому инвентарю
+
+    vars = { # Указываем значения:
+        user = "[user]" # пользователь
+        instance0 = join("", [openstack_compute_instance_v2.instance0.name, " ansible_host=", openstack_networking_floatingip_v2.floatingip_instance0.address]) # текущий инстанс
+    }
+}
+
+## Говорим о том, куда и что сохранять
+resource "local_file" "save_inventory" { # Создание локального инвентаря Ansible
+    content     = data.template_file.inventory.rendered # Текущий контент, т.е. содержимое
+    filename    = "/home/[user]/[any_directory]/inventory" # название файла инвентаря
+}</code>
+                </pre>
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Работаем с примером реализации</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">## При необходимости, как в текущей реализации, создаем папку с шаблонами:
+mkdir _templates
+
+## Создаем шаблон инвентаря для авто-генерации Ansible:
+vim _templates/inventory.tpl
+
+## Помещаем в него следующее:
+${instance0} # пример использования переменной, как в текущей реализации    
+
+[all:vars] # Присваиваем переменные Ansible
+ansible_ssh_user = ${user} # 
+ansbile_ssh_extra_args = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' # Экстра-параметры SSH
+ansible_python_interpreter = /usr/bin/python3
+
+mkdir ansible # Создаем директорию для Ansible
+
+## Проверяем:
+terraform validate # валидация конфигурации
+terraform plan # планировка конфигурации
+terraform apply # применение конфигурации
+
+cat ansible/inventory # проверка заполненного инвентаря
+
+apt-get update && apt-get install -y ansible ## Установка Ansible
+
+# Проверяем инвентарный файл:
+ansible -i ansible/inventory -m ping all</code>
+                </pre>
+            </div>
+
+            <p class="text-gray-300 mb-2">Есть также необходимость в реализации WireGuard на базе облачной инфраструктуры. Всю реализацию можно также выполнить при помощи Ansible.</p>
+            
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет: </strong>Не забывайте создать template для шаблонного файла, иначе ничего начисто работать не будет.</span>
+                </div>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Шаблонный файл</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">## Создаем файл шаблона:
+vim _templates/instance_wg0.tpl
+
+[Interface] 
+Address = 10.20.30.2/29
+PrivateKey = "[приватный ключ]"
+
+[Peer] 
+PublicKey = "[публичный ключ]"
+AllowedIPs = "[Указываем разрешенные IP]"
+PersistentKeepalive = 10 # Время между пингами
+Endpoint = ${floatingip_instance}:51820 # IP-адрес сервера WireGuard
+
+# Создаем директорию:
+mkdir ansible/wireguard</code>                
+                </pre>
+            </div>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет: </strong>Не забывайте проверять: <code>terraform validate</code>, а также планировать и применять конфигурации <code>terraform plan</code> и <code>terraform apply</code></span>
+                </div>
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Пример реализации конфигурации WireGuard с использованием Ansible. Заполнение Playbook</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">## Реализация PlayBook для настройку VPN-соединения средствами WireGuard:
+vim ansible/wireguard_playbook.yml
+---
+  - name: Install packages
+    hosts: all
+    become: true
+
+    tasks:
+      - name: Install WireGuard
+        community.general.apt_rpm:
+            name: 
+              - wireguard-tools
+              - wireguard-tools-wg-quick
+            state: latest
+            update_cache: true
+
+    - name: Settings Instance WireGuard server
+    hosts: [укажите инстанс при необходимости]
+    become: true
+
+    tasks:
+      - name: Create directory '/etc/wireguard'
+        ansible.builtin.file:
+            path: /etc/wireguard
+            state: directory
+            mode: '0755'
+      - name: Copy conf-file
+        ansible.builtin.copy:
+            src: ansible/wireguard/["название"].conf
+            dest: /etc/wireguard/["название"].conf
+      - name: Started and enabled
+        ansible.builtin.systemd:
+            name: wg-quick@wg0
+            state: started
+            enabled: true
+    - name: Settings WireGuard client
+      hosts: [укажите инстанс при необходимости]
+      become: true
+
+    tasks:
+      - name: Create directory '/etc/wireguard'
+        ansible.builtin.file:
+            path: /etc/wireguard
+            state: directory
+            mode: '0755'
+      - name: Copy conf-file
+        ansible.builtin.copy:
+            src: ansible/wireguard/["название"].conf
+            dest: /etc/wireguard/["название"].conf
+      - name: Started and enabled
+        ansible.builtin.systemd:
+            name: wg-quick@wg0
+            state: started
+            enabled: true</code>                
+                </pre>
+            </div>
+
+            <p class="text-gray-300">К дополнению, не забудьте установить модули</p>
+            <pre class="overflow-x-auto text-sm">
+                <code class="language-bash font-mono">ansible-galaxy collection install community.general</code>
+            </pre>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Проверка PlayBook: </strong><code>ansible-playbook -i ansible-inventory ansible/wireguard_playbook.yml</code></span>
+                    <span>вместо ansible/wireguard_playbook.yml можно указывать любой другой PlayBook.</span>
+                </div>
+            </div>
+
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Реализация PlayBook для подключения инстанса к инстансу по SSH с использованием туннеля VPN на основе WireGuard</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">vim ansible/ssh_playbook.yml
+
+---
+- hosts: [укажите инстансы при необходимости]
+    become: true
+
+    tasks:
+    - name: Settings 'sshd_config' file
+      ansible.builtin.lineinfile:
+      line: "{{ item }}"
+      path: /etc/openssh/sshd_config # Директория может быть другой
+      state: present
+      with_items:
+      - "PasswordAuthentication no"
+      - "Match address [Подсеть, либо IP]" # Для матчинга в SSH
+      - "   PasswordAuthentication yes"
+
+    - name: Restart sshd
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted
+    
+## Проверяем:
+ansible-playbook -i ansible-inventory ansible/ssh_playbook.yml</code>
+                </pre>
+            </div>  
+        </section>         
+        
+        <section id="devstack-cloudinit-yml" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-while mb-4"><i class="fa-solid fa-wand-magic"></i> Формирование автоматической конфигурации</h2>
+            <p class="text-gray-300 mb-2">Как правило, формирование автоматической конфигурации необходимо только тогда, когда вмешательство со стороны не имеет обязательств. В том плане, что вся инфраструктура должна подниматься автоматически.</p>
+            <p class="text-gray-300 mb-2">Несомненно, автоматическая конфигурация упрощает работу с инфраструктурой в несколько раз, благодаря чему, появляется безопасность и отказоустойчивость инфраструктуры.</p>
+            <p class="text-gray-300 mb-2">Пример создания файла автоматической конфигурации на базе cloudinit.sh будет также с примерами на основе выше приведенных файлов.</p>
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Совет: </strong>Используйте только внедренные элементы в инфраструктуру. Стройте файл авто-конфигурации на основе только своих данных, не используйте примеры.</span>
+                </div>
+            </div>
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2">Файл cloudinit.sh</h3>
+                <pre class="overflow-x-auto text-sm">
+                    <code class="language-bash font-mono">#!/bin/bash
+cd /home/[user]/bin # переход в директорию
+source cloud.conf # загрузка всех переменных сред
+terraform init # инициализация
+terraform apply -auto-approve # применение конфигурации
+terraform output > /home/[user]/white.ip # вывод дебагг-файла
+ansible-playbook -i ansible-inventory ansible/wireguard_playbook.yml # настройка VPN-соединения
+ansible-playbook -i ansible-inventory ansible/ssh_playbook.yml # настройка SSH-соединения
+                    
+echo "Доступность каждого инстанса:"
+echo ""
+openstack --insecure server list
+
+echo "Доступность созданного балансировщика нагрузки:"
+echo ""
+openstack --insecure loadbalancer list
+
+echo "Доступность серверов через балансировщик нагрузки:"
+echo ""
+openstack --insecure loadbalancer member list HTTP
+openstack --insecure loadbalancer member list HTTPS</code>
+                </pre>
+            </div>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Важно! </strong>Не забудьте назначить права файлу: <code>chmod +x cloudinit.sh</code></span>
+                </div>
+            </div>
+
+            <p class="text-gray-300 mb-2">Стоит учесть, что для выполнения авто-конфигурации из любой директории, необходимо проверить <code class="language-bash">$PATH</code>, иначе файл будет работать только из той директории, в которой создан.</p>
+        </section>   
+    </div>
+</div>
+{% endblock %}

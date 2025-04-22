@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Firewall документация - InfoSecurity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white">
+            <i class="fas fa-fire text-blue-400 mr-2"></i>Документация по межсетевому экрану
+        </h1>
+        <strong class="text-gray-300">Данный раздел содержит информацию о межсетевых экранах.</strong>
+        <p class="text-gray-300">Раздел включает сведения о среде межсетевого экрана, его настройках и использовании.</p>
+        <p class="text-gray-300">Эти настройки предназначены для графического межсетевого экрана - Ideco NGFW.</p>
+        <div class="divider"></div>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="#fw-basic" class="btn btn-sm"><i class="fas fa-cog mr-2"></i>Базовая настройка</a>
+    </div>
+
+    <div class="space-y-12">
+        <section id="fw-basic" class="scroll-mt-20">
+            <h2 class="text-2xl font-semibold text-white mb-4"><i class="fas fa-cog mr-2"></i> Базовая конфигурация</h2>
+            <p class="text-gray-300 mb-2">Первоначальная настройка через графический интерфейс управления межсетевым экраном.</p>
+
+            <div class="alert alert-info shadow-lg mb-4">
+                <div>
+                    <i class="fas fa-desktop"></i>
+                    <span>Вся конфигурация выполняется через веб-интерфейс</span>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-signature"></i> Идентификация системы</h3>
+                <div class="flex items-start gap-4">
+                    <div class="flex-1">
+                        <p class="text-gray-300 mb-2">Шаги:</p>
+                        <ol class="list-decimal pl-5 text-gray-300 space-y-1">
+                            <li>Перейдите в верхний левый угол</li>
+                            <li>Найдите поле "Имя"</li>
+                            <li>Введите новое имя хоста</li>
+                        </ol>
+                    </div>
+                    <div class="mockup-browser border bg-base-300 flex-1">
+                        <div class="mockup-browser-toolbar">
+                            <div class="input">https://[IP]:8443</div>
+                        </div>
+                        <div class="px-4 py-8 bg-base-200 text-center">
+                            <i class="fas fa-server text-4xl mb-2"></i>
+                            <p>Настройка имени хоста</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-network-wired"></i> Настройка интерфейсов</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Первый интерфейс</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Нажмите "Изменить" на существующем интерфейсе</li>
+                            <li>Назначьте описательное имя</li>
+                            <li>Добавьте в соответствующую зону безопасности</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Второй интерфейс</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Нажмите "Добавить интерфейс"</li>
+                            <li>Настройте параметры IP</li>
+                            <li>Назначьте зону безопасности</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4 mb-6">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-route"></i> Настройка OSPF</h3>
+                <div class="alert alert-warning shadow-lg mb-4">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Важно: Отключите все флажки перед настройкой</span>
+                    </div>
+                </div>
+                <ol class="list-decimal pl-5 text-gray-300 space-y-2">
+                    <li>Включите протокол OSPF</li>
+                    <li>Добавьте интерфейсы с указанием:
+                        <ul class="list-disc pl-5 mt-1">
+                            <li>Имени интерфейса</li>
+                            <li>Имени зоны/области</li>
+                            <li>Стоимости маршрута</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        
+            <div class="bg-base-200 rounded-box p-4">
+                <h3 class="font-semibold text-lg mb-2"><i class="fas fa-user-shield"></i> Доступ в интернет</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Создание пользователя</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Перейдите: Пользователи → Учетные записи</li>
+                            <li>Нажмите иконку добавления учетной записи</li>
+                            <li>Укажите:
+                                <ul class="list-circle pl-5">
+                                    <li>Имя: <code>network</code></li>
+                                    <li>Логин: <code>network</code></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-400 mb-2">Авторизация</h4>
+                        <ul class="list-disc pl-5 text-gray-300 space-y-1">
+                            <li>Перейдите: Пользователи → Авторизация</li>
+                            <li>Укажите:
+                                <ul class="list-circle pl-5">
+                                    <li>Пользователь: <code>network</code></li>
+                                    <li>Подсеть: <code>[IP/Маска]</code></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

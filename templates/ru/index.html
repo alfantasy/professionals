@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Работа в сети! Системное администрирование на Linux.{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[70vh] bg-gray-800 rounded-lg border border-gray-700">
+    <div class="hero-content text-center">
+        <div class="max-w-2xl">
+            <h1 class="text-5xl font-bold mb-6 text-white">Добро пожаловать в проект InfoSecurity</h1>
+            <p class="text-xl mb-6 text-gray-300">Полный ресурс по системному администрированию Linux и кибербезопасности</p>
+
+            <!-- Обновленная сетка с 3 карточками -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Карточка 1 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-network-wired mr-2 text-blue-400"></i>Сетевые технологии
+                    </h2>
+                    <p class="text-gray-400">Настройка сетей Linux, Cisco и конфигурация межсетевых экранов.</p>
+                </div>
+
+                <!-- Карточка 2 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in delay-100">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-lock mr-2 text-blue-400"></i>Инструменты безопасности
+                    </h2>
+                    <p class="text-gray-400">Лучшие практики и инструменты кибербезопасности.</p>
+                </div>
+
+                <!-- Карточка 3 -->
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:border-blue-500 transition-all shadow hover:shadow-lg animate-fade-in delay-200">
+                    <h2 class="text-xl font-semibold text-white mb-2 flex items-center justify-start">
+                        <i class="fas fa-server mr-2 text-blue-400"></i>Настройка систем
+                    </h2>
+                    <p class="text-gray-400">Полные руководства по настройке и обслуживанию серверов.</p>
+                </div>
+            </div>
+
+            <!-- Описание -->
+            <div class="mb-8 text-left space-y-4">
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+                    InfoSecurity — специальный проект по информационной безопасности. Этот сайт представляет базу знаний по системному администрированию Linux.
+                </p>
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-comments mr-2 text-blue-400"></i>
+                    Любые вопросы, предложения и комментарии приветствуются.
+                </p>
+                <p class="text-lg text-gray-300">
+                    <i class="fas fa-book mr-2 text-blue-400"></i>
+                    Доступна документация по Alt Linux, Cisco Packet Tracer, Firewall, Cyber Backup и Terraform.
+                </p>
+            </div>
+
+            <a href="/ru/docs" class="btn btn-primary btn-lg">
+                <i class="fas fa-arrow-right mr-2"></i>Перейти к документации
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Анимация -->
+<style>
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
+}
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+</style>
+{% endblock %}
